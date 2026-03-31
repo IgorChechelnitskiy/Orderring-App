@@ -7,13 +7,15 @@ import {
   View
 } from 'react-native';
 
-import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
+import {ThemedText} from '@/components/themed-text';
+import {ThemedView} from '@/components/themed-view';
 import ImageSlider from '@/components/ImageSlider';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useThemeStore } from '@/store/themeStore';
-import { useEffect, useState } from 'react';
-import { supabase } from '@/utils/supabase';
+import {useSafeAreaInsets} from 'react-native-safe-area-context';
+import {useThemeStore} from '@/store/themeStore';
+import {supabase} from '@/utils/supabase';
+import {useQuery} from '@tanstack/react-query';
+import {Stack, useRouter} from 'expo-router';
+import React from 'react';
 
 type ProductCategory = {
   id: number;
@@ -32,72 +34,57 @@ type ProductPromotion = {
 export default function Page() {
   const insets = useSafeAreaInsets();
   const { isDarkMode } = useThemeStore();
+  const router = useRouter();
 
-  const [categories, setCategories] = useState<ProductCategory[]>([]);
-  const [promotions, setPromotions] = useState<ProductPromotion[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    fetchCategories();
-    fetchPromotions();
-  }, []);
-
-  useEffect(() => {
-    console.log(promotions);
-  }, [promotions]);
-
-  const fetchCategories = async () => {
-    try {
-      const { data, error } = await supabase.from('Categories').select('*');
-
-      if (error) throw error;
-      setCategories(data || []);
-    } catch (error) {
-      if (error instanceof Error) {
-        console.error('Error fetching categories:', error.message);
-      } else {
-        console.error('An unknown error occurred:', error);
-      }
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const fetchPromotions = async () => {
-    try {
+  const { data: promotions = [], isLoading: promoLoading } = useQuery({
+    queryKey: ['promotions'],
+    queryFn: async () => {
       const { data, error } = await supabase.from('Promotions').select('*');
-
       if (error) throw error;
-      setPromotions(data || []);
-    } catch (error) {
-      if (error instanceof Error) {
-        console.error('Error fetching promotions:', error.message);
-      } else {
-        console.error('An unknown error occurred:', error);
-      }
-    } finally {
-      setLoading(false);
-    }
-  };
+      return data as ProductPromotion[];
+    },
+    // staleTime: 1000 * 60 * 5,
+  });
+
+  const { data: categories = [], isLoading: catLoading } = useQuery({
+    queryKey: ['categories'],
+    queryFn: async () => {
+      const { data, error } = await supabase.from('Categories').select('*');
+      if (error) throw error;
+      return data as ProductCategory[];
+    },
+    // staleTime: 1000 * 60 * 10,
+  });
 
   return (
     <ThemedView style={[styles.container, { paddingTop: insets.top }]}>
+      <Stack.Screen
+        options={{
+          headerShown: false,
+        }}
+      />
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
         <ImageSlider data={promotions} />
 
         <ThemedText style={styles.sectionTitle}>Categories</ThemedText>
 
-        {loading ? (
+        {catLoading ? (
           <ActivityIndicator size="large" color="#8E8E93" style={{ marginTop: 20 }} />
         ) : (
           <View style={styles.categoryGrid}>
             {categories.map((item) => (
               <Pressable
                 key={item.id}
-                style={[
-                  styles.card,
-                  { backgroundColor: isDarkMode ? '#252D3A' : '#E5E9EB' }, // Our lighter dark mode color
-                ]}>
+                onPress={() =>
+                  router.push({
+                    pathname: '/category/[id]',
+                    params: {
+                      id: item.id.toString(),
+                      name: item.categoryName,
+                    },
+                  })
+                }
+                style={[styles.card, { backgroundColor: isDarkMode ? '#252D3A' : '#E5E9EB' }]}>
                 <Image source={{ uri: item.imageUrl }} style={styles.cardImage} />
                 <ThemedText style={styles.cardText}>{item.categoryName}</ThemedText>
               </Pressable>

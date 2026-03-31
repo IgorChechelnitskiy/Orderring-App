@@ -13,7 +13,6 @@ const ITEM_WIDTH = width;
 
 export default function ImageSlider({ data }: { data: any[] }) {
   const renderSeparator = () => <View style={{ width: 10 }} />;
-  console.log('DATA', data);
   return (
     <View style={styles.container}>
       <FlatList
@@ -32,7 +31,6 @@ export default function ImageSlider({ data }: { data: any[] }) {
             onPress={() => {
               Alert.alert(`Warning: Image ${item.id} was clicked!`);
             }}>
-            {/*<Image source={item.imageUrl} style={styles.bannerImage} />*/}
             <Image source={{ uri: item.imageUrl }} style={styles.bannerImage} />
           </TouchableOpacity>
         )}

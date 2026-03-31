@@ -75,26 +75,6 @@ export default function TabLayout() {
           tabBarIcon: ({ color }) => <TabBarIcon name="user" color={color} />,
         }}
       />
-      {/*<Tabs.Screen*/}
-      {/*  name="profile/userConfiguration"*/}
-      {/*  options={{*/}
-      {/*    href: null,*/}
-      {/*    headerShown: true,*/}
-      {/*    title: 'User Settings',*/}
-      {/*    headerTitle: () => (*/}
-      {/*      <Pressable*/}
-      {/*        onPress={() => router.push('/profile')}*/}
-      {/*        style={{ width: '100%', paddingVertical: 10 }}>*/}
-      {/*        <ThemedText type="subtitle">User Settings</ThemedText>*/}
-      {/*      </Pressable>*/}
-      {/*    ),*/}
-      {/*    headerLeft: () => (*/}
-      {/*      <Pressable onPress={() => router.push('/profile')} style={{ marginLeft: 15 }}>*/}
-      {/*        <Ionicons name="chevron-back" size={24} color={theme.text} />*/}
-      {/*      </Pressable>*/}
-      {/*    ),*/}
-      {/*  }}*/}
-      {/*/>*/}
     </Tabs>
   );
 }
