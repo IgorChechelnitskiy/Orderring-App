@@ -1,15 +1,12 @@
 import React from 'react';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
-import { Redirect, router, Tabs } from 'expo-router';
+import { Redirect, Tabs } from 'expo-router';
 import { useAuth } from '@clerk/expo';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Colors } from '@/constants/theme';
 // 1. Импортируем твой стор
 import { useThemeStore } from '@/store/themeStore';
-import { Pressable } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
-import { ThemedText } from '@/components/themed-text';
 
 function TabBarIcon(props: {
   name: React.ComponentProps<typeof FontAwesome>['name'];
@@ -72,32 +69,32 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
-        name="profile/index"
+        name="profile"
         options={{
           title: 'Profile',
           tabBarIcon: ({ color }) => <TabBarIcon name="user" color={color} />,
         }}
       />
-      <Tabs.Screen
-        name="profile/userConfiguration"
-        options={{
-          href: null,
-          headerShown: true,
-          title: 'User Settings',
-          headerTitle: () => (
-            <Pressable
-              onPress={() => router.push('/profile')}
-              style={{ width: '100%', paddingVertical: 10 }}>
-              <ThemedText type="subtitle">User Settings</ThemedText>
-            </Pressable>
-          ),
-          headerLeft: () => (
-            <Pressable onPress={() => router.push('/profile')} style={{ marginLeft: 15 }}>
-              <Ionicons name="chevron-back" size={24} color={theme.text} />
-            </Pressable>
-          ),
-        }}
-      />
+      {/*<Tabs.Screen*/}
+      {/*  name="profile/userConfiguration"*/}
+      {/*  options={{*/}
+      {/*    href: null,*/}
+      {/*    headerShown: true,*/}
+      {/*    title: 'User Settings',*/}
+      {/*    headerTitle: () => (*/}
+      {/*      <Pressable*/}
+      {/*        onPress={() => router.push('/profile')}*/}
+      {/*        style={{ width: '100%', paddingVertical: 10 }}>*/}
+      {/*        <ThemedText type="subtitle">User Settings</ThemedText>*/}
+      {/*      </Pressable>*/}
+      {/*    ),*/}
+      {/*    headerLeft: () => (*/}
+      {/*      <Pressable onPress={() => router.push('/profile')} style={{ marginLeft: 15 }}>*/}
+      {/*        <Ionicons name="chevron-back" size={24} color={theme.text} />*/}
+      {/*      </Pressable>*/}
+      {/*    ),*/}
+      {/*  }}*/}
+      {/*/>*/}
     </Tabs>
   );
 }

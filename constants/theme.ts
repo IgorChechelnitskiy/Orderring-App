@@ -17,6 +17,7 @@ export const Colors = {
     tabIconSelected: tintColorLight,
     icon: '#687076',
     buttonBackground: '#E5E9EB', // Светло-серый, чуть темнее основного фона
+    link: '#2C5E6E',
   },
   dark: {
     text: '#D1F2EB', // Off-white for readability
@@ -26,6 +27,7 @@ export const Colors = {
     tabIconSelected: tintColorDark,
     buttonBackground: '#1A212E',
     icon: '#9BA1A6',
+    link: '#76D7C4',
   },
 };
 

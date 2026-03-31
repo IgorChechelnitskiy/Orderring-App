@@ -3,11 +3,11 @@ import { ClerkProvider } from '@clerk/expo';
 import { tokenCache } from '@clerk/expo/token-cache';
 import { Slot } from 'expo-router';
 import LoadingScreen from './loading_screen';
-// import { useColorScheme } from 'react-native';
 import { DarkTheme, DefaultTheme } from '@react-navigation/native';
 import { Colors } from '@/constants/theme';
 import { ThemeProvider } from '@react-navigation/core';
 import { useThemeStore } from '@/store/themeStore';
+import { RootSiblingParent } from 'react-native-root-siblings';
 
 const publishableKey = process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY!;
 
@@ -17,9 +17,8 @@ if (!publishableKey) {
 
 export default function RootLayout() {
   const [isAppReady, setIsAppReady] = useState(false);
-  // const colorScheme = useColorScheme();
 
-  const { isDarkMode } = useThemeStore(); // Слушаем наше хранилище
+  const { isDarkMode } = useThemeStore();
 
   const currentTheme = isDarkMode ? 'dark' : 'light';
 
@@ -32,15 +31,6 @@ export default function RootLayout() {
       text: Colors[currentTheme].text,
     },
   };
-
-  // // Создаем кастомную тему на основе твоих Colors
-  // const CustomTheme = {
-  //   ...(colorScheme === 'dark' ? DarkTheme : DefaultTheme),
-  //   colors: {
-  //     ...(colorScheme === 'dark' ? DarkTheme.colors : DefaultTheme.colors),
-  //     background: Colors[colorScheme ?? 'light'].background, // Твой Deep Forest или Ice White
-  //   },
-  // };
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -56,9 +46,11 @@ export default function RootLayout() {
 
   return (
     <ClerkProvider publishableKey={publishableKey} tokenCache={tokenCache}>
-      <ThemeProvider value={NavigationTheme}>
-        <Slot />
-      </ThemeProvider>
+      <RootSiblingParent>
+        <ThemeProvider value={NavigationTheme}>
+          <Slot />
+        </ThemeProvider>
+      </RootSiblingParent>
     </ClerkProvider>
   );
 }
