@@ -51,7 +51,7 @@ export default function ProfileLayout() {
       <Stack.Screen
         name="changePassword"
         options={{
-          title: 'Security',
+          title: 'Change Password',
           presentation: 'card',
         }}
       />

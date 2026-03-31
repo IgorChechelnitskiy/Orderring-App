@@ -25,7 +25,7 @@ export const Colors = {
     tint: tintColorDark, // Minty highlight
     tabIconDefault: '#52616B', // Subdued slate
     tabIconSelected: tintColorDark,
-    buttonBackground: '#1A212E',
+    buttonBackground: '#2C3545',
     icon: '#9BA1A6',
     link: '#76D7C4',
   },

@@ -105,10 +105,7 @@ export default function UserScreen() {
     onPressAction?: () => void;
   }) => (
     <Pressable
-      style={({ pressed }) => [
-        styles.menuRow,
-        { opacity: pressed ? 0.7 : 1 }, // Добавляем визуальный отклик
-      ]}
+      style={({ pressed }) => [styles.menuRow, { opacity: pressed ? 0.7 : 1 }]}
       onPress={onPressAction}>
       <View style={[styles.iconContainer, { backgroundColor: bgColor || 'transparent' }]}>
         <Ionicons name={icon} size={20} color={iconColor} />
@@ -207,7 +204,7 @@ export default function UserScreen() {
       </Modal>
       <Modal
         visible={isPreviewVisible}
-        transparent={false} // Делаем непрозрачным, чтобы фон был полностью черным
+        transparent={false}
         animationType="fade"
         onRequestClose={() => setIsPreviewVisible(false)}>
         <ThemedView style={styles.previewContainer}>
@@ -217,7 +214,7 @@ export default function UserScreen() {
           <Image
             source={{ uri: user?.imageUrl }}
             style={styles.previewImage}
-            resizeMode="contain" // Важно, чтобы фото не обрезалось
+            resizeMode="contain"
           />
           <View style={styles.previewFooter}>
             <ThemedText style={styles.previewName}>{user?.fullName}</ThemedText>

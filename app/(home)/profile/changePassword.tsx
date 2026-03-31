@@ -1,12 +1,5 @@
 import React, { useState } from 'react';
-import {
-  ActivityIndicator,
-  Keyboard,
-  Pressable,
-  StyleSheet,
-  TextInput,
-  View
-} from 'react-native';
+import { ActivityIndicator, Keyboard, Pressable, StyleSheet, TextInput, View } from 'react-native';
 import { useUser } from '@clerk/expo';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';

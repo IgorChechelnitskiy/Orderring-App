@@ -173,5 +173,5 @@ const styles = StyleSheet.create({
     elevation: 3,
   },
   cancelText: { fontWeight: '600', fontSize: 16 },
-  saveText: { color: '#0F2027', fontWeight: '700', fontSize: 16 },
+  saveText: { color: '#FFFFFF', fontWeight: '700', fontSize: 16 },
 });
