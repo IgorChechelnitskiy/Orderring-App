@@ -1,10 +1,15 @@
 import React from 'react';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
-import { Redirect, Tabs } from 'expo-router';
+import { Redirect, router, Tabs } from 'expo-router';
 import { useAuth } from '@clerk/expo';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+
 import { Colors } from '@/constants/theme';
-import { useColorScheme } from '@/hooks/use-color-scheme';
+// 1. Импортируем твой стор
+import { useThemeStore } from '@/store/themeStore';
+import { Pressable } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
+import { ThemedText } from '@/components/themed-text';
 
 function TabBarIcon(props: {
   name: React.ComponentProps<typeof FontAwesome>['name'];
@@ -15,8 +20,11 @@ function TabBarIcon(props: {
 
 export default function TabLayout() {
   const { isSignedIn, isLoaded } = useAuth();
-  const colorScheme = useColorScheme() ?? 'light';
   const insets = useSafeAreaInsets();
+
+  // 2. Берем значение из нашего Zustand Store вместо useColorScheme
+  const { isDarkMode } = useThemeStore();
+  const colorScheme = isDarkMode ? 'dark' : 'light';
   const theme = Colors[colorScheme];
 
   if (!isLoaded) return null;
@@ -39,7 +47,7 @@ export default function TabLayout() {
           left: 16,
           right: 16,
           borderRadius: 32,
-          backgroundColor: theme.background,
+          backgroundColor: theme.background, // Фон таб-бара теперь реактивный
           borderTopWidth: 0,
           elevation: 8,
           shadowColor: '#000',
@@ -47,6 +55,8 @@ export default function TabLayout() {
           shadowOpacity: 0.1,
           shadowRadius: 12,
           paddingBottom: 0,
+          borderWidth: isDarkMode ? 0 : 1,
+          borderColor: 'rgba(0,0,0,0.05)',
         },
         tabBarLabelStyle: {
           fontSize: 11,
@@ -62,10 +72,30 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
-        name="profile"
+        name="profile/index"
         options={{
           title: 'Profile',
           tabBarIcon: ({ color }) => <TabBarIcon name="user" color={color} />,
+        }}
+      />
+      <Tabs.Screen
+        name="profile/userConfiguration"
+        options={{
+          href: null,
+          headerShown: true,
+          title: 'User Settings',
+          headerTitle: () => (
+            <Pressable
+              onPress={() => router.push('/profile')}
+              style={{ width: '100%', paddingVertical: 10 }}>
+              <ThemedText type="subtitle">User Settings</ThemedText>
+            </Pressable>
+          ),
+          headerLeft: () => (
+            <Pressable onPress={() => router.push('/profile')} style={{ marginLeft: 15 }}>
+              <Ionicons name="chevron-back" size={24} color={theme.text} />
+            </Pressable>
+          ),
         }}
       />
     </Tabs>

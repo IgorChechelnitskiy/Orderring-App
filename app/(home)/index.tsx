@@ -1,6 +1,4 @@
-import { useClerk, useUser } from '@clerk/expo';
 import { StyleSheet } from 'react-native';
-import { useRouter } from 'expo-router';
 
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
@@ -33,25 +31,7 @@ const data = [
 export default function Page() {
   const insets = useSafeAreaInsets();
 
-  const { user } = useUser();
-  const { signOut } = useClerk();
-  const router = useRouter();
-
-  const handleSignOut = async () => {
-    await signOut();
-    // После выхода Clerk сбросит состояние, и _layout сам сделает редирект
-  };
-
   return (
-    // <ThemedView style={styles.container}>
-    //   <ThemedText type="title">Welcome!</ThemedText>
-    //
-    //   <ThemedText style={styles.email}>Hello, {user?.emailAddresses[0].emailAddress}</ThemedText>
-    //
-    //   <Pressable style={styles.button} onPress={handleSignOut}>
-    //     <ThemedText style={styles.buttonText}>Sign out</ThemedText>
-    //   </Pressable>
-    // </ThemedView>
     <ThemedView
       style={[
         styles.container,

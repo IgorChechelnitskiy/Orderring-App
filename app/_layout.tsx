@@ -3,10 +3,11 @@ import { ClerkProvider } from '@clerk/expo';
 import { tokenCache } from '@clerk/expo/token-cache';
 import { Slot } from 'expo-router';
 import LoadingScreen from './loading_screen';
-import { useColorScheme } from 'react-native';
+// import { useColorScheme } from 'react-native';
 import { DarkTheme, DefaultTheme } from '@react-navigation/native';
 import { Colors } from '@/constants/theme';
 import { ThemeProvider } from '@react-navigation/core';
+import { useThemeStore } from '@/store/themeStore';
 
 const publishableKey = process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY!;
 
@@ -16,16 +17,30 @@ if (!publishableKey) {
 
 export default function RootLayout() {
   const [isAppReady, setIsAppReady] = useState(false);
-  const colorScheme = useColorScheme();
+  // const colorScheme = useColorScheme();
 
-  // Создаем кастомную тему на основе твоих Colors
-  const CustomTheme = {
-    ...(colorScheme === 'dark' ? DarkTheme : DefaultTheme),
+  const { isDarkMode } = useThemeStore(); // Слушаем наше хранилище
+
+  const currentTheme = isDarkMode ? 'dark' : 'light';
+
+  const NavigationTheme = {
+    ...(isDarkMode ? DarkTheme : DefaultTheme),
     colors: {
-      ...(colorScheme === 'dark' ? DarkTheme.colors : DefaultTheme.colors),
-      background: Colors[colorScheme ?? 'light'].background, // Твой Deep Forest или Ice White
+      ...(isDarkMode ? DarkTheme.colors : DefaultTheme.colors),
+      background: Colors[currentTheme].background,
+      card: Colors[currentTheme].background,
+      text: Colors[currentTheme].text,
     },
   };
+
+  // // Создаем кастомную тему на основе твоих Colors
+  // const CustomTheme = {
+  //   ...(colorScheme === 'dark' ? DarkTheme : DefaultTheme),
+  //   colors: {
+  //     ...(colorScheme === 'dark' ? DarkTheme.colors : DefaultTheme.colors),
+  //     background: Colors[colorScheme ?? 'light'].background, // Твой Deep Forest или Ice White
+  //   },
+  // };
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -41,7 +56,7 @@ export default function RootLayout() {
 
   return (
     <ClerkProvider publishableKey={publishableKey} tokenCache={tokenCache}>
-      <ThemeProvider value={CustomTheme}>
+      <ThemeProvider value={NavigationTheme}>
         <Slot />
       </ThemeProvider>
     </ClerkProvider>
