@@ -3,10 +3,11 @@ import {
   ActivityIndicator,
   FlatList,
   Image,
+  Pressable,
   StyleSheet,
   View
 } from 'react-native';
-import { Stack, useLocalSearchParams } from 'expo-router';
+import { router, Stack, useLocalSearchParams } from 'expo-router';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/utils/supabase';
 import { ThemedView } from '@/components/themed-view';
@@ -35,39 +36,44 @@ export default function CategoryDetailScreen() {
       if (error) throw error;
       return data as Dish[];
     },
+    staleTime: 1000 * 60 * 10,
   });
 
-  console.log('name: ', name);
-
   const renderDish = ({ item }: { item: Dish }) => (
-    <View style={[styles.dishCard, { backgroundColor: isDarkMode ? '#252D3A' : '#FFFFFF' }]}>
-      <Image source={{ uri: item.imageUrl }} style={styles.dishImage} />
-      <View style={styles.dishInfo}>
-        <ThemedText style={styles.dishName}>{item.dishName}</ThemedText>
-        <ThemedText style={styles.dishDesc} numberOfLines={2}>
-          {item.dishDescription}
-        </ThemedText>
-        <View style={styles.priceRow}>
-          <ThemedText style={styles.price}>${item.price}</ThemedText>
-          <View style={styles.ratingBadge}>
-            <ThemedText style={styles.ratingText}>⭐ {item.rating}</ThemedText>
+    <Pressable
+      onPress={() =>
+        router.push({
+          pathname: '/dish/[id]',
+          params: { id: item.id },
+        })
+      }>
+      <View style={[styles.dishCard, { backgroundColor: isDarkMode ? '#252D3A' : '#FFFFFF' }]}>
+        <Image source={{ uri: item.imageUrl }} style={styles.dishImage} />
+        <View style={styles.dishInfo}>
+          <ThemedText style={styles.dishName}>{item.dishName}</ThemedText>
+          <ThemedText style={styles.dishDesc} numberOfLines={2}>
+            {item.dishDescription}
+          </ThemedText>
+          <View style={styles.priceRow}>
+            <ThemedText style={styles.price}>${item.price}</ThemedText>
+            <View style={styles.ratingBadge}>
+              <ThemedText style={styles.ratingText}>⭐ {item.rating}</ThemedText>
+            </View>
           </View>
         </View>
       </View>
-    </View>
+    </Pressable>
   );
 
   return (
     <ThemedView style={styles.container}>
       <Stack.Screen
         options={{
-          title: (name as string) || 'Menu', // Shows "Sushi", "Burgers", etc.
-          headerShown: true,
-          // headerBackTitle: 'Back', // Text next to the back arrow (iOS)
-          // headerTintColor: isDarkMode ? '#FFFFFF' : '#000000', // Arrow color
-          // headerStyle: {
-          //   backgroundColor: isDarkMode ? '#121212' : '#FFFFFF', // Header background
-          // },
+          headerShown: false,
+          title: (name as string) || 'Category', // This shows the name in the header
+          headerTitleStyle: { fontSize: 18, fontWeight: 'bold' },
+          headerBackTitle: '',
+          headerShadowVisible: false,
         }}
       />
 
@@ -96,7 +102,6 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     marginBottom: 16,
     padding: 12,
-    // Shadow for light mode
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.1,
@@ -131,7 +136,7 @@ const styles = StyleSheet.create({
   price: {
     fontSize: 16,
     fontWeight: '700',
-    color: '#2ecc71', // Green for price
+    color: '#2ecc71',
   },
   ratingBadge: {
     backgroundColor: 'rgba(0,0,0,0.05)',

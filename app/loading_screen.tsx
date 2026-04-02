@@ -1,22 +1,46 @@
-import { ActivityIndicator, Image, StyleSheet, View } from 'react-native';
+import React, { useEffect, useRef } from 'react';
+import { ActivityIndicator, Animated, StyleSheet, View } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
+import { FoodDashLogo } from '@/components/food-dash-logo';
 
-const LoadingScreen = () =>
-  <View style={styles.container}>
-    <LinearGradient
-      colors={['#0F2027', '#203A43', '#2c5364']}
-      style={styles.background}
-    />
-    <Image source={require('../assets/images/order-icon.png')} style={{width: 100, height: 100}}/>
-    <ActivityIndicator size="large" color="white" style={{ marginTop: 20 }} />
-  </View>;
-  export default LoadingScreen;
+const LoadingScreen = () => {
+  const fadeAnim = useRef(new Animated.Value(0.6)).current;
+
+  useEffect(() => {
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(fadeAnim, {
+          toValue: 1,
+          duration: 1000,
+          useNativeDriver: true,
+        }),
+        Animated.timing(fadeAnim, {
+          toValue: 0.6,
+          duration: 1000,
+          useNativeDriver: true,
+        }),
+      ]),
+    ).start();
+  }, [fadeAnim]);
+
+  return (
+    <View style={styles.container}>
+      <LinearGradient colors={['#1a1a1a', '#2d2d2d', '#1a1a1a']} style={styles.background} />
+
+      <Animated.View style={{ opacity: fadeAnim, transform: [{ scale: 1.2 }] }}>
+        <FoodDashLogo />
+      </Animated.View>
+
+      <ActivityIndicator size="small" color="#ff6347" style={{ marginTop: 40 }} />
+    </View>
+  );
+};
+
+export default LoadingScreen;
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: 'red',
     flex: 1,
-    height: 100,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -25,6 +49,6 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     top: 0,
-    height: '100%',
+    bottom: 0,
   },
 });

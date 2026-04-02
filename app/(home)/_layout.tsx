@@ -2,10 +2,8 @@ import React from 'react';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { Redirect, Tabs } from 'expo-router';
 import { useAuth } from '@clerk/expo';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Colors } from '@/constants/theme';
-// 1. Импортируем твой стор
 import { useThemeStore } from '@/store/themeStore';
 
 function TabBarIcon(props: {
@@ -17,9 +15,7 @@ function TabBarIcon(props: {
 
 export default function TabLayout() {
   const { isSignedIn, isLoaded } = useAuth();
-  const insets = useSafeAreaInsets();
 
-  // 2. Берем значение из нашего Zustand Store вместо useColorScheme
   const { isDarkMode } = useThemeStore();
   const colorScheme = isDarkMode ? 'dark' : 'light';
   const theme = Colors[colorScheme];
@@ -40,11 +36,10 @@ export default function TabLayout() {
         tabBarStyle: {
           position: 'absolute',
           height: 65,
-          bottom: insets.bottom > 0 ? insets.bottom : 20,
           left: 16,
           right: 16,
           borderRadius: 32,
-          backgroundColor: theme.background, // Фон таб-бара теперь реактивный
+          backgroundColor: theme.background,
           borderTopWidth: 0,
           elevation: 8,
           shadowColor: '#000',
