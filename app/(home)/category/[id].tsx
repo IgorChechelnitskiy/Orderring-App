@@ -1,18 +1,13 @@
 import React from 'react';
-import {
-  ActivityIndicator,
-  FlatList,
-  Image,
-  Pressable,
-  StyleSheet,
-  View
-} from 'react-native';
-import { router, Stack, useLocalSearchParams } from 'expo-router';
+import { ActivityIndicator, FlatList, StyleSheet } from 'react-native';
+import { Stack, useLocalSearchParams } from 'expo-router';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/utils/supabase';
 import { ThemedView } from '@/components/themed-view';
 import { ThemedText } from '@/components/themed-text';
 import { useThemeStore } from '@/store/themeStore';
+import { DishCard } from '@/components/dish-card';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 type Dish = {
   id: number;
@@ -22,55 +17,34 @@ type Dish = {
   imageUrl: string;
   rating: number;
   dishSize: string;
+  isFavourite: boolean;
 };
 
 export default function CategoryDetailScreen() {
   const { id, name } = useLocalSearchParams();
   const { isDarkMode } = useThemeStore();
+  const insets = useSafeAreaInsets();
 
   const { data: dishes = [], isLoading } = useQuery({
     queryKey: ['dishes', id],
     queryFn: async () => {
-      const { data, error } = await supabase.from('Dishes').select('*').eq('categoryId', id);
+      const { data, error } = await supabase
+        .from('Dishes')
+        .select('*')
+        .eq('categoryId', id)
+        .order('id', { ascending: true });
 
       if (error) throw error;
       return data as Dish[];
     },
-    staleTime: 1000 * 60 * 10,
   });
-
-  const renderDish = ({ item }: { item: Dish }) => (
-    <Pressable
-      onPress={() =>
-        router.push({
-          pathname: '/dish/[id]',
-          params: { id: item.id },
-        })
-      }>
-      <View style={[styles.dishCard, { backgroundColor: isDarkMode ? '#252D3A' : '#FFFFFF' }]}>
-        <Image source={{ uri: item.imageUrl }} style={styles.dishImage} />
-        <View style={styles.dishInfo}>
-          <ThemedText style={styles.dishName}>{item.dishName}</ThemedText>
-          <ThemedText style={styles.dishDesc} numberOfLines={2}>
-            {item.dishDescription}
-          </ThemedText>
-          <View style={styles.priceRow}>
-            <ThemedText style={styles.price}>${item.price}</ThemedText>
-            <View style={styles.ratingBadge}>
-              <ThemedText style={styles.ratingText}>⭐ {item.rating}</ThemedText>
-            </View>
-          </View>
-        </View>
-      </View>
-    </Pressable>
-  );
 
   return (
     <ThemedView style={styles.container}>
       <Stack.Screen
         options={{
           headerShown: false,
-          title: (name as string) || 'Category', // This shows the name in the header
+          title: (name as string) || 'Category',
           headerTitleStyle: { fontSize: 18, fontWeight: 'bold' },
           headerBackTitle: '',
           headerShadowVisible: false,
@@ -83,8 +57,8 @@ export default function CategoryDetailScreen() {
         <FlatList
           data={dishes}
           keyExtractor={(item) => item.id.toString()}
-          renderItem={renderDish}
-          contentContainerStyle={styles.listPadding}
+          renderItem={({ item }) => <DishCard item={item} />}
+          contentContainerStyle={[styles.listPadding, { paddingBottom: 70 + insets.bottom }]}
           ListEmptyComponent={
             <ThemedText style={styles.empty}>No dishes found in this category.</ThemedText>
           }

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Platform, Pressable, StyleSheet, TextInput, View } from 'react-native';
-import { Link, Stack } from 'expo-router';
+import { Link, Stack, useSegments } from 'expo-router';
 import { ClerkProvider } from '@clerk/expo';
 import { tokenCache } from '@clerk/expo/token-cache';
 import {
@@ -25,9 +25,7 @@ const publishableKey = process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY!;
 
 const queryClient = new QueryClient({
   defaultOptions: {
-    queries: {
-      staleTime: 1000 * 60 * 5,
-    },
+    queries: { staleTime: 1000 * 60 * 10, gcTime: 1000 * 60 * 30 },
   },
 });
 
@@ -37,12 +35,20 @@ export default function RootLayout() {
   const { query, setQuery } = useSearchStore();
 
   const insets = useSafeAreaInsets();
+  const segments = useSegments();
   const { isDarkMode } = useThemeStore();
   const cartItems = useCartStore((state) => state.items);
   const totalCount = cartItems.reduce((acc, item) => acc + item.quantity, 0);
 
   const currentTheme = isDarkMode ? 'dark' : 'light';
   const theme = Colors[currentTheme];
+
+  const isSubPage = segments[0] !== '(home)' && segments.length > 0;
+  const isProfilePage = (segments as string[]).includes('profile');
+  const isCategoryPage = (segments as string[]).includes('category');
+  const isOrderPage = (segments as string[]).includes('order');
+  const isDishPage = (segments as string[]).includes('dish');
+  const shouldShowHeader = !isSubPage && !isProfilePage;
 
   const NavigationTheme = {
     ...(isDarkMode ? DarkTheme : DefaultTheme),
@@ -66,75 +72,89 @@ export default function RootLayout() {
       <QueryClientProvider client={queryClient}>
         <RootSiblingParent>
           <ThemeProvider value={NavigationTheme}>
-            <View style={{ flex: 1, backgroundColor: theme.background }}>
-              <View
-                style={[
-                  styles.headerContainer,
-                  {
-                    backgroundColor: theme.background,
-                    paddingTop: insets.top + (Platform.OS === 'android' ? 10 : 0),
-                  },
-                ]}>
-                <View style={styles.headerTopRow}>
-                  <Pressable
-                    onPress={() => {
-                      setIsSearchVisible(!isSearchVisible);
-                      setQuery('');
-                    }}
-                    style={styles.iconButton}>
-                    <Ionicons
-                      name={isSearchVisible ? 'close' : 'search-outline'}
-                      size={24}
-                      color={theme.text}
-                    />
-                  </Pressable>
-
-                  <View style={styles.logoCenterContainer} pointerEvents="box-none">
-                    <FoodDashLogo />
-                  </View>
-
-                  <Link href="/cart" asChild>
-                    <Pressable style={styles.iconButton}>
-                      <Ionicons name="cart-outline" size={26} color={theme.text} />
-                      {totalCount > 0 && (
-                        <View style={[styles.badge, { borderColor: theme.background }]}>
-                          <ThemedText style={styles.badgeText}>
-                            {totalCount > 9 ? '9+' : totalCount}
-                          </ThemedText>
-                        </View>
-                      )}
+            <View
+              style={{
+                flex: 1,
+                backgroundColor: theme.background,
+              }}>
+              {shouldShowHeader && (
+                <View
+                  style={[
+                    styles.headerContainer,
+                    {
+                      backgroundColor: theme.background,
+                      paddingTop: insets.top + (Platform.OS === 'android' ? 10 : 0),
+                    },
+                  ]}>
+                  <View style={styles.headerTopRow}>
+                    <Pressable
+                      onPress={() => {
+                        setIsSearchVisible(!isSearchVisible);
+                        setQuery('');
+                      }}
+                      style={styles.iconButton}>
+                      <Ionicons
+                        name={isSearchVisible ? 'close' : 'search-outline'}
+                        size={24}
+                        color={theme.text}
+                      />
                     </Pressable>
-                  </Link>
-                </View>
 
-                {isSearchVisible && (
-                  <View style={styles.searchBarContainer}>
-                    <Ionicons name="search" size={18} color="#888" style={{ marginRight: 8 }} />
-                    <TextInput
-                      style={[styles.searchInput, { color: theme.text }]}
-                      placeholder="Search dishes..."
-                      placeholderTextColor="#888"
-                      value={query}
-                      onChangeText={setQuery}
-                      autoFocus
-                      returnKeyType="search"
-                    />
+                    <View style={styles.logoCenterContainer} pointerEvents="box-none">
+                      <FoodDashLogo />
+                    </View>
+
+                    <Link href="/cart" asChild>
+                      <Pressable style={styles.iconButton}>
+                        <Ionicons name="cart-outline" size={26} color={theme.text} />
+                        {totalCount > 0 && (
+                          <View style={[styles.badge, { borderColor: theme.background }]}>
+                            <ThemedText style={styles.badgeText}>
+                              {totalCount > 9 ? '9+' : totalCount}
+                            </ThemedText>
+                          </View>
+                        )}
+                      </Pressable>
+                    </Link>
                   </View>
-                )}
-              </View>
+
+                  {isSearchVisible && (
+                    <View style={styles.searchBarContainer}>
+                      <Ionicons name="search" size={18} color="#888" style={{ marginRight: 8 }} />
+                      <TextInput
+                        style={[styles.searchInput, { color: theme.text }]}
+                        placeholder="Search dishes..."
+                        placeholderTextColor="#888"
+                        value={query}
+                        onChangeText={setQuery}
+                        autoFocus
+                        returnKeyType="search"
+                      />
+                    </View>
+                  )}
+                </View>
+              )}
 
               <Stack screenOptions={{ headerShown: false }}>
                 <Stack.Screen name="(home)" />
                 <Stack.Screen
                   name="category/[id]"
                   options={{
-                    headerShown: false,
+                    headerShown: true,
+                    headerTitle: '',
+                    headerShadowVisible: false,
+                    headerStyle: { backgroundColor: theme.background },
+                    headerTintColor: theme.text,
                   }}
                 />
                 <Stack.Screen
                   name="cart"
                   options={{
-                    headerShown: false,
+                    headerShown: true,
+                    presentation: 'modal',
+                    title: 'Your Cart',
+                    headerStyle: { backgroundColor: theme.background },
+                    headerTintColor: theme.text,
                   }}
                 />
               </Stack>

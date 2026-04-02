@@ -18,6 +18,7 @@ import { Stack, useRouter } from 'expo-router';
 import React from 'react';
 import { useSearchStore } from '@/store/searchStore';
 import { Ionicons } from '@expo/vector-icons';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 type ProductCategory = {
   id: number;
@@ -37,6 +38,8 @@ export default function Page() {
   const { isDarkMode } = useThemeStore();
   const router = useRouter();
   const searchQuery = useSearchStore((state) => state.query);
+  const insets = useSafeAreaInsets();
+  const bottomPadding = 65 + insets.bottom + 20;
 
   const { data: promotions = [], isLoading: promoLoading } = useQuery({
     queryKey: ['promotions'],
@@ -45,7 +48,6 @@ export default function Page() {
       if (error) throw error;
       return data as ProductPromotion[];
     },
-    staleTime: 1000 * 60 * 10,
   });
 
   const { data: categories = [], isLoading: catLoading } = useQuery({
@@ -55,13 +57,16 @@ export default function Page() {
       if (error) throw error;
       return data as ProductCategory[];
     },
-    staleTime: 1000 * 60 * 10,
   });
 
   const { data: allDishes = [] } = useQuery({
     queryKey: ['searchDishes'],
     queryFn: async () => {
-      const { data } = await supabase.from('Dishes').select('id, dishName, price, imageUrl');
+      const { data, error } = await supabase
+        .from('Dishes')
+        .select('id, dishName, price, imageUrl, isFavourite');
+
+      if (error) throw error;
       return data;
     },
   });
@@ -81,9 +86,13 @@ export default function Page() {
       />
       {!isSearching ? (
         <ScrollView
-          contentContainerStyle={styles.scrollContent}
+          contentContainerStyle={[styles.scrollContent, { paddingBottom: bottomPadding }]}
           showsVerticalScrollIndicator={false}>
-          <ImageSlider data={promotions} />
+          {promoLoading ? (
+            <ActivityIndicator size="large" color="#ff6347" style={{ marginTop: 20 }} />
+          ) : (
+            <ImageSlider data={promotions} />
+          )}
           <ThemedText style={styles.sectionTitle}>Categories</ThemedText>
           {catLoading ? (
             <ActivityIndicator size="large" color="#ff6347" style={{ marginTop: 20 }} />
@@ -107,6 +116,7 @@ export default function Page() {
         <View style={[styles.searchOverlay, { backgroundColor: isDarkMode ? '#121212' : '#fff' }]}>
           <FlatList
             data={filteredDishes}
+            contentContainerStyle={{ paddingBottom: bottomPadding }}
             keyExtractor={(item) => item.id.toString()}
             ListHeaderComponent={
               <ThemedText style={styles.searchCount}>

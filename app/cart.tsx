@@ -1,12 +1,33 @@
 import React from 'react';
-import { FlatList, Image, Pressable, StyleSheet, View } from 'react-native';
+import {
+  ActivityIndicator,
+  FlatList,
+  Image,
+  Pressable,
+  StyleSheet,
+  View
+} from 'react-native';
 import { useCartStore } from '@/store/cartStore';
 import { ThemedView } from '@/components/themed-view';
 import { ThemedText } from '@/components/themed-text';
 import { Ionicons } from '@expo/vector-icons';
+import { useCreateOrder } from '@/hooks/useCreateOrder'; // Import our new hook
 
 export default function CartScreen() {
-  const { items, removeItem, totalPrice, clearCart } = useCartStore();
+  const { items, removeItem, totalPrice } = useCartStore();
+
+  // 1. Initialize the mutation hook
+  const { mutate: createOrder, isPending } = useCreateOrder();
+
+  const handleCheckout = () => {
+    if (items.length === 0) return;
+
+    // 2. Trigger the Supabase insert
+    createOrder({
+      items: items,
+      total: totalPrice(),
+    });
+  };
 
   const renderItem = ({ item }: { item: any }) => (
     <View style={styles.cartItem}>
@@ -18,7 +39,7 @@ export default function CartScreen() {
           ${(item.price * item.quantity).toFixed(2)}
         </ThemedText>
       </View>
-      <Pressable onPress={() => removeItem(item.id)}>
+      <Pressable onPress={() => removeItem(item.id)} disabled={isPending}>
         <Ionicons name="trash-outline" size={22} color="red" />
       </Pressable>
     </View>
@@ -29,6 +50,7 @@ export default function CartScreen() {
       <FlatList
         data={items}
         renderItem={renderItem}
+        keyExtractor={(item) => item.id.toString()}
         ListEmptyComponent={
           <ThemedText style={{ textAlign: 'center', marginTop: 40 }}>
             Your cart is empty 🍕
@@ -44,8 +66,17 @@ export default function CartScreen() {
               ${totalPrice().toFixed(2)}
             </ThemedText>
           </View>
-          <Pressable style={styles.checkoutBtn} onPress={() => alert('Proceed to Payment')}>
-            <ThemedText style={styles.btnText}>Checkout</ThemedText>
+
+          {/* 3. Update button to handle loading state */}
+          <Pressable
+            style={[styles.checkoutBtn, isPending && { opacity: 0.7 }]}
+            onPress={handleCheckout}
+            disabled={isPending}>
+            {isPending ? (
+              <ActivityIndicator color="white" />
+            ) : (
+              <ThemedText style={styles.btnText}>Checkout</ThemedText>
+            )}
           </Pressable>
         </View>
       )}
@@ -56,8 +87,21 @@ export default function CartScreen() {
 const styles = StyleSheet.create({
   cartItem: { flexDirection: 'row', alignItems: 'center', marginBottom: 20 },
   itemImage: { width: 60, height: 60, borderRadius: 8 },
-  footer: { marginTop: 20, borderTopWidth: 1, borderTopColor: '#eee', paddingTop: 20 },
+  footer: {
+    marginTop: 20,
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(128,128,128,0.2)',
+    paddingTop: 20,
+    paddingBottom: 20,
+  },
   totalRow: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 20 },
-  checkoutBtn: { backgroundColor: '#ff6347', padding: 18, borderRadius: 12, alignItems: 'center' },
+  checkoutBtn: {
+    backgroundColor: '#ff6347',
+    padding: 18,
+    borderRadius: 12,
+    alignItems: 'center',
+    height: 60,
+    justifyContent: 'center',
+  },
   btnText: { color: 'white', fontWeight: 'bold', fontSize: 18 },
 });

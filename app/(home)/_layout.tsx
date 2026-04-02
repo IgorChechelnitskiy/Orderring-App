@@ -5,6 +5,7 @@ import { useAuth } from '@clerk/expo';
 
 import { Colors } from '@/constants/theme';
 import { useThemeStore } from '@/store/themeStore';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 function TabBarIcon(props: {
   name: React.ComponentProps<typeof FontAwesome>['name'];
@@ -15,6 +16,7 @@ function TabBarIcon(props: {
 
 export default function TabLayout() {
   const { isSignedIn, isLoaded } = useAuth();
+  const insets = useSafeAreaInsets();
 
   const { isDarkMode } = useThemeStore();
   const colorScheme = isDarkMode ? 'dark' : 'light';
@@ -29,31 +31,36 @@ export default function TabLayout() {
   return (
     <Tabs
       screenOptions={{
-        sceneStyle: { backgroundColor: theme.background },
-        tabBarActiveTintColor: theme.tint,
-        tabBarInactiveTintColor: theme.tabIconDefault,
         headerShown: false,
+        tabBarActiveTintColor: theme.tint,
         tabBarStyle: {
           position: 'absolute',
-          height: 65,
-          left: 16,
-          right: 16,
-          borderRadius: 32,
+          bottom: 0,
+          left: 0,
+          right: 0,
+          height: 60 + insets.bottom,
           backgroundColor: theme.background,
-          borderTopWidth: 0,
-          elevation: 8,
+          borderTopLeftRadius: 24,
+          borderTopRightRadius: 24,
+          borderBottomLeftRadius: 0,
+          borderBottomRightRadius: 0,
+          borderTopWidth: 1,
+          borderLeftWidth: 1,
+          borderRightWidth: 1,
+          borderColor: isDarkMode ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)',
+          elevation: 10,
           shadowColor: '#000',
-          shadowOffset: { width: 0, height: 4 },
+          shadowOffset: { width: 0, height: -4 },
           shadowOpacity: 0.1,
-          shadowRadius: 12,
-          paddingBottom: 0,
-          borderWidth: isDarkMode ? 0 : 1,
-          borderColor: 'rgba(0,0,0,0.05)',
+          shadowRadius: 10,
         },
         tabBarLabelStyle: {
-          fontSize: 11,
+          fontSize: 12,
           fontWeight: '600',
-          marginBottom: 10,
+          marginBottom: insets.bottom > 0 ? insets.bottom / 2 : 8,
+        },
+        tabBarIconStyle: {
+          marginTop: 8,
         },
       }}>
       <Tabs.Screen
@@ -64,10 +71,42 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
+        name="favorites"
+        options={{
+          title: 'Favorites',
+          tabBarIcon: ({ color }) => <TabBarIcon name="heart" color={color} />,
+        }}
+      />
+      <Tabs.Screen
+        name="orders"
+        options={{
+          title: 'Orders',
+          tabBarIcon: ({ color }) => <TabBarIcon name="list-alt" color={color} />,
+        }}
+      />
+      <Tabs.Screen
         name="profile"
         options={{
           title: 'Profile',
           tabBarIcon: ({ color }) => <TabBarIcon name="user" color={color} />,
+        }}
+      />
+      <Tabs.Screen
+        name="category/[id]"
+        options={{
+          href: null,
+        }}
+      />
+      <Tabs.Screen
+        name="order/[id]"
+        options={{
+          href: null,
+        }}
+      />
+      <Tabs.Screen
+        name="dish/[id]"
+        options={{
+          href: null,
         }}
       />
     </Tabs>

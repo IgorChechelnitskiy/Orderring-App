@@ -1,5 +1,12 @@
 import React, { useState } from 'react';
-import { ActivityIndicator, Image, Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import {
+  ActivityIndicator,
+  Image,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  View
+} from 'react-native';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/utils/supabase';
@@ -8,6 +15,7 @@ import { ThemedText } from '@/components/themed-text';
 import { useThemeStore } from '@/store/themeStore';
 import { Ionicons } from '@expo/vector-icons';
 import { useCartStore } from '@/store/cartStore';
+import { useToggleFavorite } from '@/hooks/useToggleFavorite';
 
 export default function DishDetailScreen() {
   const { id } = useLocalSearchParams();
@@ -15,15 +23,24 @@ export default function DishDetailScreen() {
   const { isDarkMode } = useThemeStore();
   const [quantity, setQuantity] = useState(1);
   const addItem = useCartStore((state) => state.addItem);
+  const { mutate: toggleFav } = useToggleFavorite();
 
   const { data: dish, isLoading } = useQuery({
     queryKey: ['dish', id],
     queryFn: async () => {
       const { data, error } = await supabase.from('Dishes').select('*').eq('id', id).single();
       if (error) throw error;
+      console.log('DATA', data);
       return data;
     },
   });
+
+  const handleToggleFavorite = () => {
+    if (dish) {
+      console.log('CLICKED', dish);
+      toggleFav({ id: dish.id, isFavourite: dish.isFavourite });
+    }
+  };
 
   const handleAddToOrder = () => {
     if (!dish) return;
@@ -35,6 +52,7 @@ export default function DishDetailScreen() {
       quantity: quantity,
       image: dish.imageUrl,
     });
+
     router.back();
   };
 
@@ -58,6 +76,27 @@ export default function DishDetailScreen() {
           <ThemedText style={styles.description}>
             {dish?.dishDescription || 'No description available for this delicious meal.'}
           </ThemedText>
+          <Pressable
+            onPress={handleToggleFavorite}
+            style={[
+              styles.favoriteRow,
+              {
+                backgroundColor: isDarkMode ? '#1A1A1A' : '#FFF',
+                borderColor: isDarkMode ? '#333' : '#E0E0E0',
+              },
+            ]}>
+            <View style={styles.favoriteLeft}>
+              <Ionicons
+                name={dish?.isFavourite ? 'heart' : 'heart-outline'}
+                size={24}
+                color={dish?.isFavourite ? '#ff6347' : '#888'}
+              />
+              <ThemedText style={styles.favoriteText}>
+                {dish?.isFavourite ? 'Added to Favorites' : 'Add to Favorites'}
+              </ThemedText>
+            </View>
+            {/* Chevron Removed */}
+          </Pressable>
           <View style={styles.quantityContainer}>
             <Pressable onPress={() => setQuantity(Math.max(1, quantity - 1))} style={styles.qtyBtn}>
               <Ionicons name="remove" size={24} color={isDarkMode ? 'white' : 'black'} />
@@ -120,4 +159,22 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   btnText: { color: 'white', fontSize: 18, fontWeight: 'bold' },
+  favoriteRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 24,
+    padding: 16,
+    borderRadius: 16,
+    borderWidth: 1,
+  },
+  favoriteLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  favoriteText: {
+    marginLeft: 12,
+    fontSize: 16,
+    fontWeight: '600',
+  },
 });
