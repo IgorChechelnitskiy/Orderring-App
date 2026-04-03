@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Platform, Pressable, StyleSheet, TextInput, View } from 'react-native';
-import { Link, Stack, useSegments } from 'expo-router';
+import { Link, router, Stack, useSegments } from 'expo-router';
 import { ClerkProvider } from '@clerk/expo';
 import { tokenCache } from '@clerk/expo/token-cache';
 import {
@@ -43,12 +43,16 @@ export default function RootLayout() {
   const currentTheme = isDarkMode ? 'dark' : 'light';
   const theme = Colors[currentTheme];
 
-  const isSubPage = segments[0] !== '(home)' && segments.length > 0;
   const isProfilePage = (segments as string[]).includes('profile');
   const isCategoryPage = (segments as string[]).includes('category');
   const isOrderPage = (segments as string[]).includes('order');
   const isDishPage = (segments as string[]).includes('dish');
-  const shouldShowHeader = !isSubPage && !isProfilePage;
+  // const shouldShowHeader = !isSubPage && !isProfilePage;
+
+  const shouldShowHeader =
+    !isProfilePage && (segments[0] === '(home)' || isCategoryPage || isOrderPage || isDishPage);
+
+  const showBackButton = isCategoryPage || isOrderPage || isDishPage;
 
   const NavigationTheme = {
     ...(isDarkMode ? DarkTheme : DefaultTheme),
@@ -89,13 +93,27 @@ export default function RootLayout() {
                   <View style={styles.headerTopRow}>
                     <Pressable
                       onPress={() => {
-                        setIsSearchVisible(!isSearchVisible);
-                        setQuery('');
+                        if (showBackButton) {
+                          if (isOrderPage) {
+                            router.replace('/(home)/orders');
+                          } else {
+                            router.back();
+                          }
+                        } else {
+                          setIsSearchVisible(!isSearchVisible);
+                          setQuery('');
+                        }
                       }}
                       style={styles.iconButton}>
                       <Ionicons
-                        name={isSearchVisible ? 'close' : 'search-outline'}
-                        size={24}
+                        name={
+                          showBackButton
+                            ? 'chevron-back'
+                            : isSearchVisible
+                              ? 'close'
+                              : 'search-outline'
+                        }
+                        size={26}
                         color={theme.text}
                       />
                     </Pressable>
@@ -118,7 +136,7 @@ export default function RootLayout() {
                     </Link>
                   </View>
 
-                  {isSearchVisible && (
+                  {isSearchVisible && !showBackButton && (
                     <View style={styles.searchBarContainer}>
                       <Ionicons name="search" size={18} color="#888" style={{ marginRight: 8 }} />
                       <TextInput

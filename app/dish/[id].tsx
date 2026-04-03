@@ -16,6 +16,7 @@ import { useThemeStore } from '@/store/themeStore';
 import { Ionicons } from '@expo/vector-icons';
 import { useCartStore } from '@/store/cartStore';
 import { useToggleFavorite } from '@/hooks/useToggleFavorite';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 export default function DishDetailScreen() {
   const { id } = useLocalSearchParams();
@@ -24,6 +25,7 @@ export default function DishDetailScreen() {
   const [quantity, setQuantity] = useState(1);
   const addItem = useCartStore((state) => state.addItem);
   const { mutate: toggleFav } = useToggleFavorite();
+  const insets = useSafeAreaInsets();
 
   const { data: dish, isLoading } = useQuery({
     queryKey: ['dish', id],
@@ -108,7 +110,11 @@ export default function DishDetailScreen() {
           </View>
         </View>
       </ScrollView>
-      <View style={[styles.footer, { borderTopColor: isDarkMode ? '#333' : '#eee' }]}>
+      <View
+        style={[
+          styles.footer,
+          { borderTopColor: isDarkMode ? '#333' : '#eee', paddingBottom: insets.bottom },
+        ]}>
         <Pressable style={styles.addToCartBtn} onPress={handleAddToOrder}>
           <ThemedText style={styles.btnText}>
             Add to Order • ${(dish?.price * quantity).toFixed(2)}

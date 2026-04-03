@@ -12,9 +12,13 @@ import { ThemedView } from '@/components/themed-view';
 import { ThemedText } from '@/components/themed-text';
 import { useAuth } from '@clerk/expo';
 import { router } from 'expo-router';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useThemeStore } from '@/store/themeStore';
 
 export default function OrdersScreen() {
   const { userId } = useAuth();
+  const insets = useSafeAreaInsets();
+  const { isDarkMode } = useThemeStore();
 
   const { data: orders, isLoading } = useQuery({
     queryKey: ['orders', userId],
@@ -31,16 +35,29 @@ export default function OrdersScreen() {
 
   if (isLoading) return <ActivityIndicator style={{ flex: 1 }} />;
 
-  const getStatusColor = (status: string) => {
+  const getStatusStyles = (status: string, isDarkMode: boolean) => {
     switch (status) {
       case 'new':
-        return '#2ecc71'; // Green
+        return {
+          bg: isDarkMode ? 'rgba(46, 204, 113, 0.15)' : '#E8F8F0',
+          text: '#27ae60',
+        };
       case 'preparing':
-        return '#f1c40f'; // Yellow
+        return {
+          // Using your theme's Tint for the active state
+          bg: isDarkMode ? 'rgba(168, 230, 207, 0.15)' : 'rgba(32, 58, 67, 0.1)',
+          text: isDarkMode ? '#A8E6CF' : '#203A43',
+        };
       case 'cancelled':
-        return '#95a5a6'; // Grey
+        return {
+          bg: isDarkMode ? 'rgba(255, 255, 255, 0.05)' : '#F2F2F2',
+          text: '#8E8E93',
+        };
       default:
-        return '#3498db'; // Blue
+        return {
+          bg: 'rgba(52, 152, 219, 0.1)',
+          text: '#3498db',
+        };
     }
   };
 
@@ -51,27 +68,23 @@ export default function OrdersScreen() {
         keyExtractor={(item) => item.id}
         renderItem={({ item }) => {
           const isCancelled = item.status === 'cancelled';
+          const statusStyle = getStatusStyles(item.status, isDarkMode);
 
           return (
             <Pressable
               onPress={() => router.push(`/order/${item.id}` as any)}
-              style={[
-                styles.orderCard,
-                isCancelled && { opacity: 0.6 }, // Dim the card if cancelled
-              ]}>
+              style={[styles.orderCard, isCancelled && { opacity: 0.6 }]}>
               <View style={styles.orderHeader}>
                 <ThemedText
-                  style={[
-                    styles.orderId,
-                    isCancelled && { textDecorationLine: 'line-through' }, // Strike through ID
-                  ]}>
+                  style={[styles.orderId, isCancelled && { textDecorationLine: 'line-through' }]}>
                   Order #{item.id.slice(0, 8)}
                 </ThemedText>
 
-                {/* Use your getStatusColor helper here! */}
-                <View
-                  style={[styles.statusBadge, { backgroundColor: getStatusColor(item.status) }]}>
-                  <ThemedText style={styles.statusText}>{item.status.toUpperCase()}</ThemedText>
+                <View style={[styles.statusBadge, { backgroundColor: statusStyle.bg }]}>
+                  <View style={[styles.statusDot, { backgroundColor: statusStyle.text }]} />
+                  <ThemedText style={[styles.statusText, { color: statusStyle.text }]}>
+                    {item.status.toUpperCase()}
+                  </ThemedText>
                 </View>
               </View>
 
@@ -87,7 +100,7 @@ export default function OrdersScreen() {
             </Pressable>
           );
         }}
-        contentContainerStyle={{ padding: 16 }}
+        contentContainerStyle={{ padding: 16, paddingBottom: insets.bottom + 60 }}
       />
     </ThemedView>
   );
@@ -97,14 +110,51 @@ const styles = StyleSheet.create({
   container: { flex: 1 },
   orderCard: {
     padding: 16,
-    borderRadius: 12,
-    backgroundColor: 'rgba(128,128,128,0.1)',
+    borderRadius: 16, // Smoother corners
+    backgroundColor: 'rgba(128,128,128,0.08)',
     marginBottom: 16,
+    borderWidth: 1,
+    borderColor: 'rgba(128,128,128,0.1)', // Subtle outline
   },
-  orderHeader: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 8 },
-  orderId: { fontWeight: 'bold', fontSize: 16 },
-  statusBadge: { paddingHorizontal: 8, paddingVertical: 4, borderRadius: 6 },
-  statusText: { color: 'white', fontSize: 10, fontWeight: 'bold' },
-  itemText: { opacity: 0.7, marginVertical: 2 },
-  totalPrice: { fontWeight: '700', marginTop: 8, textAlign: 'right' },
+  orderHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  orderId: {
+    fontWeight: '700',
+    fontSize: 15,
+    letterSpacing: -0.5,
+  },
+  statusBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 20, // Capsule shape
+  },
+  statusDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    marginRight: 6,
+  },
+  statusText: {
+    fontSize: 11,
+    fontWeight: '800', // Heavy weight for small text
+    letterSpacing: 0.5,
+  },
+  itemText: {
+    fontSize: 14,
+    opacity: 0.7,
+    marginVertical: 1,
+    paddingLeft: 4,
+  },
+  totalPrice: {
+    fontWeight: '800',
+    marginTop: 12,
+    textAlign: 'right',
+    fontSize: 16,
+  },
 });
