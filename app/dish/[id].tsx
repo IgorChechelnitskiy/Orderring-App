@@ -1,12 +1,5 @@
 import React, { useState } from 'react';
-import {
-  ActivityIndicator,
-  Image,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  View
-} from 'react-native';
+import { ActivityIndicator, Image, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/utils/supabase';
@@ -32,14 +25,12 @@ export default function DishDetailScreen() {
     queryFn: async () => {
       const { data, error } = await supabase.from('Dishes').select('*').eq('id', id).single();
       if (error) throw error;
-      console.log('DATA', data);
       return data;
     },
   });
 
   const handleToggleFavorite = () => {
     if (dish) {
-      console.log('CLICKED', dish);
       toggleFav({ id: dish.id, isFavourite: dish.isFavourite });
     }
   };
@@ -97,7 +88,6 @@ export default function DishDetailScreen() {
                 {dish?.isFavourite ? 'Added to Favorites' : 'Add to Favorites'}
               </ThemedText>
             </View>
-            {/* Chevron Removed */}
           </Pressable>
           <View style={styles.quantityContainer}>
             <Pressable onPress={() => setQuantity(Math.max(1, quantity - 1))} style={styles.qtyBtn}>

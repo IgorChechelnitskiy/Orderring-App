@@ -3,11 +3,7 @@ import { Platform, Pressable, StyleSheet, TextInput, View } from 'react-native';
 import { Link, router, Stack, useSegments } from 'expo-router';
 import { ClerkProvider } from '@clerk/expo';
 import { tokenCache } from '@clerk/expo/token-cache';
-import {
-  DarkTheme,
-  DefaultTheme,
-  ThemeProvider
-} from '@react-navigation/native';
+import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
 import { RootSiblingParent } from 'react-native-root-siblings';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -47,7 +43,6 @@ export default function RootLayout() {
   const isCategoryPage = (segments as string[]).includes('category');
   const isOrderPage = (segments as string[]).includes('order');
   const isDishPage = (segments as string[]).includes('dish');
-  // const shouldShowHeader = !isSubPage && !isProfilePage;
 
   const shouldShowHeader =
     !isProfilePage && (segments[0] === '(home)' || isCategoryPage || isOrderPage || isDishPage);

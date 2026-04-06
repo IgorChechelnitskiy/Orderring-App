@@ -6,7 +6,7 @@ import React from 'react';
 import { Pressable, StyleSheet, TextInput, View } from 'react-native';
 
 export default function Page() {
-  const { signUp, errors, fetchStatus } = useSignUp();
+  const { signUp, fetchStatus } = useSignUp();
   const { isSignedIn } = useAuth();
   const router = useRouter();
 
@@ -33,11 +33,8 @@ export default function Page() {
     });
     if (signUp.status === 'complete') {
       await signUp.finalize({
-        // Redirect the user to the home page after signing up
         navigate: ({ session, decorateUrl }) => {
           if (session?.currentTask) {
-            // Handle pending session tasks
-            // See https://clerk.com/docs/guides/development/custom-flows/authentication/session-tasks
             console.log(session?.currentTask);
             return;
           }
@@ -51,7 +48,6 @@ export default function Page() {
         },
       });
     } else {
-      // Check why the sign-up is not complete
       console.error('Sign-up attempt not complete:', signUp);
     }
   };
@@ -78,9 +74,6 @@ export default function Page() {
           onChangeText={(code) => setCode(code)}
           keyboardType="numeric"
         />
-        {/*{errors.fields.code && (*/}
-        {/*  <ThemedText style={styles.error}>{errors.fields.code.message}</ThemedText>*/}
-        {/*)}*/}
         <Pressable
           style={({ pressed }) => [
             styles.button,
@@ -116,9 +109,6 @@ export default function Page() {
         onChangeText={(emailAddress) => setEmailAddress(emailAddress)}
         keyboardType="email-address"
       />
-      {/*{errors.fields.emailAddress && (*/}
-      {/*  <ThemedText style={styles.error}>{errors.fields.emailAddress.message}</ThemedText>*/}
-      {/*)}*/}
       <ThemedText style={styles.label}>Password</ThemedText>
       <TextInput
         style={styles.input}
@@ -128,9 +118,6 @@ export default function Page() {
         secureTextEntry={true}
         onChangeText={(password) => setPassword(password)}
       />
-      {/*{errors.fields.password && (*/}
-      {/*  <ThemedText style={styles.error}>{errors.fields.password.message}</ThemedText>*/}
-      {/*)}*/}
       <Pressable
         style={({ pressed }) => [
           styles.button,
@@ -141,17 +128,12 @@ export default function Page() {
         disabled={!emailAddress || !password || fetchStatus === 'fetching'}>
         <ThemedText style={styles.buttonText}>Sign up</ThemedText>
       </Pressable>
-      {/* For your debugging purposes. You can just console.log errors, but we put them in the UI for convenience */}
-      {/*{errors && <ThemedText style={styles.debug}>{JSON.stringify(errors, null, 2)}</ThemedText>}*/}
-
       <View style={styles.linkContainer}>
         <ThemedText>Already have an account? </ThemedText>
         <Link href="/sign-in">
           <ThemedText type="link">Sign in</ThemedText>
         </Link>
       </View>
-
-      {/* Required for sign-up flows. Clerk's bot sign-up protection is enabled by default */}
       <View nativeID="clerk-captcha" />
     </ThemedView>
   );

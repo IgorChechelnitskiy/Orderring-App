@@ -1,12 +1,4 @@
-import {
-  ActivityIndicator,
-  FlatList,
-  Image,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  View,
-} from 'react-native';
+import { FlatList, Image, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
@@ -19,6 +11,8 @@ import React from 'react';
 import { useSearchStore } from '@/store/searchStore';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { Skeleton } from '@/components/skeleton';
+import { SearchSkeleton } from '@/components/search-skeleton';
 
 type ProductCategory = {
   id: number;
@@ -33,6 +27,10 @@ type ProductPromotion = {
   imageUrl: string;
   promotionDescription: string;
 };
+
+// function SearchSkeleton() {
+//   return null;
+// }
 
 export default function Page() {
   const { isDarkMode } = useThemeStore();
@@ -59,7 +57,7 @@ export default function Page() {
     },
   });
 
-  const { data: allDishes = [] } = useQuery({
+  const { data: allDishes = [], isLoading: searchLoading } = useQuery({
     queryKey: ['searchDishes'],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -79,23 +77,35 @@ export default function Page() {
 
   return (
     <ThemedView style={{ flex: 1 }}>
-      <Stack.Screen
-        options={{
-          headerShown: false,
-        }}
-      />
+      <Stack.Screen options={{ headerShown: false }} />
       {!isSearching ? (
         <ScrollView
           contentContainerStyle={[styles.scrollContent, { paddingBottom: bottomPadding }]}
           showsVerticalScrollIndicator={false}>
           {promoLoading ? (
-            <ActivityIndicator size="large" color="#ff6347" style={{ marginTop: 20 }} />
+            <View style={{ paddingHorizontal: 15, marginTop: 10 }}>
+              <Skeleton width="100%" height={200} borderRadius={20} />
+            </View>
           ) : (
             <ImageSlider data={promotions} />
           )}
+
           <ThemedText style={styles.sectionTitle}>Categories</ThemedText>
+
           {catLoading ? (
-            <ActivityIndicator size="large" color="#ff6347" style={{ marginTop: 20 }} />
+            <View style={styles.categoryGrid}>
+              {[1, 2, 3, 4].map((i) => (
+                <View
+                  key={i}
+                  style={[
+                    styles.card,
+                    { backgroundColor: 'transparent', elevation: 0, shadowOpacity: 0 },
+                  ]}>
+                  <Skeleton width="100%" height={100} borderRadius={12} />
+                  <Skeleton width="80%" height={14} borderRadius={4} style={{ marginTop: 10 }} />
+                </View>
+              ))}
+            </View>
           ) : (
             <View style={styles.categoryGrid}>
               {categories.map((item) => (
@@ -114,37 +124,45 @@ export default function Page() {
         </ScrollView>
       ) : (
         <View style={[styles.searchOverlay, { backgroundColor: isDarkMode ? '#121212' : '#fff' }]}>
-          <FlatList
-            data={filteredDishes}
-            contentContainerStyle={{ paddingBottom: bottomPadding }}
-            keyExtractor={(item) => item.id.toString()}
-            ListHeaderComponent={
-              <ThemedText style={styles.searchCount}>
-                {filteredDishes?.length} results found
-              </ThemedText>
-            }
-            renderItem={({ item }) => (
-              <Pressable
-                style={styles.searchResultItem}
-                onPress={() =>
-                  router.push({ pathname: '/dish/[id]', params: { id: item.id.toString() } })
-                }>
-                <Image source={{ uri: item.imageUrl }} style={styles.resultImage} />
-                <View style={{ flex: 1, marginLeft: 12 }}>
-                  <ThemedText style={styles.resultName}>{item.dishName}</ThemedText>
-                  <ThemedText style={styles.resultPrice}>${item.price}</ThemedText>
-                </View>
-                <Ionicons name="chevron-forward" size={20} color="#888" />
-              </Pressable>
-            )}
-            ListEmptyComponent={
-              <View style={styles.emptyContainer}>
-                <ThemedText style={styles.emptyText}>
-                  No dishes match &#34;{searchQuery}&#34;
+          {isSearching && searchLoading ? (
+            <View style={{ marginTop: 10 }}>
+              {[...Array(6)].map((_, i) => (
+                <SearchSkeleton key={i} />
+              ))}
+            </View>
+          ) : (
+            <FlatList
+              data={filteredDishes}
+              contentContainerStyle={{ paddingBottom: bottomPadding }}
+              keyExtractor={(item) => item.id.toString()}
+              ListHeaderComponent={
+                <ThemedText style={styles.searchCount}>
+                  {filteredDishes?.length} results found
                 </ThemedText>
-              </View>
-            }
-          />
+              }
+              renderItem={({ item }) => (
+                <Pressable
+                  style={styles.searchResultItem}
+                  onPress={() =>
+                    router.push({ pathname: '/dish/[id]', params: { id: item.id.toString() } })
+                  }>
+                  <Image source={{ uri: item.imageUrl }} style={styles.resultImage} />
+                  <View style={{ flex: 1, marginLeft: 12 }}>
+                    <ThemedText style={styles.resultName}>{item.dishName}</ThemedText>
+                    <ThemedText style={styles.resultPrice}>${item.price}</ThemedText>
+                  </View>
+                  <Ionicons name="chevron-forward" size={20} color="#888" />
+                </Pressable>
+              )}
+              ListEmptyComponent={
+                <View style={styles.emptyContainer}>
+                  <ThemedText style={styles.emptyText}>
+                    No dishes match &#34;{searchQuery}&#34;
+                  </ThemedText>
+                </View>
+              }
+            />
+          )}
         </View>
       )}
     </ThemedView>

@@ -21,13 +21,36 @@ export function DishCard({ item }: { item: Dish }) {
   const router = useRouter();
   const { mutate: toggleFav } = useToggleFavorite();
 
-  console.log('DishCard rendered with item:', item);
+  const ImagePlaceholder = () => (
+    <View
+      style={[
+        styles.dishImage,
+        {
+          backgroundColor: isDarkMode ? 'rgba(168, 230, 207, 0.1)' : 'rgba(32, 58, 67, 0.05)',
+          justifyContent: 'center',
+          alignItems: 'center',
+          borderWidth: 1,
+          borderColor: 'rgba(128,128,128,0.1)',
+        },
+      ]}>
+      <Ionicons
+        name="fast-food-outline"
+        size={32}
+        color={isDarkMode ? '#A8E6CF' : '#203A43'}
+        style={{ opacity: 0.5 }}
+      />
+    </View>
+  );
 
   return (
     <Pressable
       onPress={() => router.push({ pathname: '/dish/[id]', params: { id: item.id } })}
       style={[styles.dishCard, { backgroundColor: isDarkMode ? '#252D3A' : '#FFFFFF' }]}>
-      <Image source={{ uri: item.imageUrl }} style={styles.dishImage} />
+      {item.imageUrl ? (
+        <Image source={{ uri: item.imageUrl }} style={styles.dishImage} />
+      ) : (
+        <ImagePlaceholder />
+      )}
       <Pressable
         onPress={(e) => {
           e.stopPropagation();

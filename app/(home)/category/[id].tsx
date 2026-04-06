@@ -1,13 +1,13 @@
 import React from 'react';
-import { ActivityIndicator, FlatList, StyleSheet } from 'react-native';
+import { FlatList, StyleSheet, View } from 'react-native';
 import { Stack, useLocalSearchParams } from 'expo-router';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/utils/supabase';
 import { ThemedView } from '@/components/themed-view';
 import { ThemedText } from '@/components/themed-text';
-import { useThemeStore } from '@/store/themeStore';
 import { DishCard } from '@/components/dish-card';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { CategoryDishSkeleton } from '@/components/category-dish-skeleton';
 
 type Dish = {
   id: number;
@@ -22,7 +22,6 @@ type Dish = {
 
 export default function CategoryDetailScreen() {
   const { id, name } = useLocalSearchParams();
-  const { isDarkMode } = useThemeStore();
   const insets = useSafeAreaInsets();
 
   const { data: dishes = [], isLoading } = useQuery({
@@ -33,7 +32,6 @@ export default function CategoryDetailScreen() {
         .select('*')
         .eq('categoryId', id)
         .order('id', { ascending: true });
-
       if (error) throw error;
       return data as Dish[];
     },
@@ -52,7 +50,11 @@ export default function CategoryDetailScreen() {
       />
 
       {isLoading ? (
-        <ActivityIndicator size="large" style={{ flex: 1 }} />
+        <View style={styles.listPadding}>
+          {[1, 2, 3, 4, 5].map((item) => (
+            <CategoryDishSkeleton key={item} />
+          ))}
+        </View>
       ) : (
         <FlatList
           data={dishes}

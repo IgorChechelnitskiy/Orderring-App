@@ -14,6 +14,7 @@ import { useAuth } from '@clerk/expo';
 import { router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useThemeStore } from '@/store/themeStore';
+import { OrderCardSkeleton } from '@/components/order-card-skeleton';
 
 export default function OrdersScreen() {
   const { userId } = useAuth();
@@ -44,7 +45,6 @@ export default function OrdersScreen() {
         };
       case 'preparing':
         return {
-          // Using your theme's Tint for the active state
           bg: isDarkMode ? 'rgba(168, 230, 207, 0.15)' : 'rgba(32, 58, 67, 0.1)',
           text: isDarkMode ? '#A8E6CF' : '#203A43',
         };
@@ -63,45 +63,53 @@ export default function OrdersScreen() {
 
   return (
     <ThemedView style={styles.container}>
-      <FlatList
-        data={orders}
-        keyExtractor={(item) => item.id}
-        renderItem={({ item }) => {
-          const isCancelled = item.status === 'cancelled';
-          const statusStyle = getStatusStyles(item.status, isDarkMode);
+      {isLoading ? (
+        <View style={{ padding: 16 }}>
+          {[1, 2, 3, 4, 5].map((i) => (
+            <OrderCardSkeleton key={i} />
+          ))}
+        </View>
+      ) : (
+        <FlatList
+          data={orders}
+          keyExtractor={(item) => item.id}
+          renderItem={({ item }) => {
+            const isCancelled = item.status === 'cancelled';
+            const statusStyle = getStatusStyles(item.status, isDarkMode);
 
-          return (
-            <Pressable
-              onPress={() => router.push(`/order/${item.id}` as any)}
-              style={[styles.orderCard, isCancelled && { opacity: 0.6 }]}>
-              <View style={styles.orderHeader}>
-                <ThemedText
-                  style={[styles.orderId, isCancelled && { textDecorationLine: 'line-through' }]}>
-                  Order #{item.id.slice(0, 8)}
-                </ThemedText>
-
-                <View style={[styles.statusBadge, { backgroundColor: statusStyle.bg }]}>
-                  <View style={[styles.statusDot, { backgroundColor: statusStyle.text }]} />
-                  <ThemedText style={[styles.statusText, { color: statusStyle.text }]}>
-                    {item.status.toUpperCase()}
+            return (
+              <Pressable
+                onPress={() => router.push(`/order/${item.id}` as any)}
+                style={[styles.orderCard, isCancelled && { opacity: 0.6 }]}>
+                <View style={styles.orderHeader}>
+                  <ThemedText
+                    style={[styles.orderId, isCancelled && { textDecorationLine: 'line-through' }]}>
+                    Order #{item.id.slice(0, 8)}
                   </ThemedText>
+
+                  <View style={[styles.statusBadge, { backgroundColor: statusStyle.bg }]}>
+                    <View style={[styles.statusDot, { backgroundColor: statusStyle.text }]} />
+                    <ThemedText style={[styles.statusText, { color: statusStyle.text }]}>
+                      {item.status.toUpperCase()}
+                    </ThemedText>
+                  </View>
                 </View>
-              </View>
 
-              {item.orderItems.map((dish: any, idx: number) => (
-                <ThemedText key={idx} style={styles.itemText}>
-                  {dish.quantity}x {dish.name}
+                {item.orderItems.map((dish: any, idx: number) => (
+                  <ThemedText key={idx} style={styles.itemText}>
+                    {dish.quantity}x {dish.name}
+                  </ThemedText>
+                ))}
+
+                <ThemedText style={styles.totalPrice}>
+                  Total: ${item.total_price.toFixed(2)}
                 </ThemedText>
-              ))}
-
-              <ThemedText style={styles.totalPrice}>
-                Total: ${item.total_price.toFixed(2)}
-              </ThemedText>
-            </Pressable>
-          );
-        }}
-        contentContainerStyle={{ padding: 16, paddingBottom: insets.bottom + 60 }}
-      />
+              </Pressable>
+            );
+          }}
+          contentContainerStyle={{ padding: 16, paddingBottom: insets.bottom + 60 }}
+        />
+      )}
     </ThemedView>
   );
 }
@@ -110,11 +118,11 @@ const styles = StyleSheet.create({
   container: { flex: 1 },
   orderCard: {
     padding: 16,
-    borderRadius: 16, // Smoother corners
+    borderRadius: 16,
     backgroundColor: 'rgba(128,128,128,0.08)',
     marginBottom: 16,
     borderWidth: 1,
-    borderColor: 'rgba(128,128,128,0.1)', // Subtle outline
+    borderColor: 'rgba(128,128,128,0.1)',
   },
   orderHeader: {
     flexDirection: 'row',
@@ -132,7 +140,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 10,
     paddingVertical: 4,
-    borderRadius: 20, // Capsule shape
+    borderRadius: 20,
   },
   statusDot: {
     width: 6,
@@ -142,7 +150,7 @@ const styles = StyleSheet.create({
   },
   statusText: {
     fontSize: 11,
-    fontWeight: '800', // Heavy weight for small text
+    fontWeight: '800',
     letterSpacing: 0.5,
   },
   itemText: {

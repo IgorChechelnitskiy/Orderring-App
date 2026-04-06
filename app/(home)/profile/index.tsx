@@ -52,7 +52,6 @@ export default function ProfileScreen() {
     <ThemedView style={styles.container}>
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
         <View style={styles.mainContent}>
-          {/* Header */}
           <View style={styles.header}>
             <View style={styles.avatarWrapper}>
               <Image source={{ uri: user?.imageUrl }} style={styles.avatar} />

@@ -1,28 +1,19 @@
 import React from 'react';
-import {
-  ActivityIndicator,
-  FlatList,
-  Image,
-  Pressable,
-  StyleSheet,
-  View
-} from 'react-native';
+import { ActivityIndicator, FlatList, Image, Pressable, StyleSheet, View } from 'react-native';
 import { useCartStore } from '@/store/cartStore';
 import { ThemedView } from '@/components/themed-view';
 import { ThemedText } from '@/components/themed-text';
 import { Ionicons } from '@expo/vector-icons';
-import { useCreateOrder } from '@/hooks/useCreateOrder'; // Import our new hook
+import { useCreateOrder } from '@/hooks/useCreateOrder';
 
 export default function CartScreen() {
   const { items, removeItem, totalPrice } = useCartStore();
 
-  // 1. Initialize the mutation hook
   const { mutate: createOrder, isPending } = useCreateOrder();
 
   const handleCheckout = () => {
     if (items.length === 0) return;
 
-    // 2. Trigger the Supabase insert
     createOrder({
       items: items,
       total: totalPrice(),
@@ -67,7 +58,6 @@ export default function CartScreen() {
             </ThemedText>
           </View>
 
-          {/* 3. Update button to handle loading state */}
           <Pressable
             style={[styles.checkoutBtn, isPending && { opacity: 0.7 }]}
             onPress={handleCheckout}

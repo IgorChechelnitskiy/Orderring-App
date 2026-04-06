@@ -14,14 +14,12 @@ export default function Page() {
   const [code, setCode] = React.useState('');
 
   const handleSubmit = async () => {
-    // 1. Используем identifier вместо emailAddress
     const { error } = await signIn.password({
       identifier: emailAddress,
       password,
     });
 
     if (error) {
-      // Выведи ошибку на экран, чтобы понимать, что не так (например, breach password)
       alert(error.message);
       console.error(JSON.stringify(error, null, 2));
       return;
@@ -36,12 +34,10 @@ export default function Page() {
           }
 
           console.log('Sign in complete! Redirecting...');
-          // Используем replace, чтобы нельзя было вернуться назад на логин
           router.replace('/(home)');
         },
       });
     } else if (signIn.status === 'needs_client_trust') {
-      // Логика для подтверждения устройства/почты
       const emailCodeFactor = signIn.supportedSecondFactors.find(
         (factor) => factor.strategy === 'email_code',
       );
@@ -60,8 +56,6 @@ export default function Page() {
       await signIn.finalize({
         navigate: ({ session, decorateUrl }) => {
           if (session?.currentTask) {
-            // Handle pending session tasks
-            // See https://clerk.com/docs/guides/development/custom-flows/authentication/session-tasks
             console.log(session?.currentTask);
             return;
           }
@@ -75,7 +69,6 @@ export default function Page() {
         },
       });
     } else {
-      // Check why the sign-in is not complete
       console.error('Sign-in attempt not complete:', signIn);
     }
   };
@@ -162,11 +155,9 @@ export default function Page() {
         disabled={!emailAddress || !password || fetchStatus === 'fetching'}>
         <ThemedText style={styles.buttonText}>Continue</ThemedText>
       </Pressable>
-      {/* For your debugging purposes. You can just console.log errors, but we put them in the UI for convenience */}
-      {/*{errors && <ThemedText style={styles.debug}>{JSON.stringify(errors, null, 2)}</ThemedText>}*/}
 
       <View style={styles.linkContainer}>
-        <ThemedText>Don't have an account? </ThemedText>
+        <ThemedText>Don&#39;t have an account? </ThemedText>
         <Link href="/sign-up">
           <ThemedText type="link">Sign up</ThemedText>
         </Link>

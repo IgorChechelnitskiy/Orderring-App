@@ -32,10 +32,9 @@ export default function OrderDetailScreen() {
 
   const currentTheme = isDarkMode ? 'dark' : 'light';
   const theme = Colors[currentTheme];
-  const iconColor = isDarkMode ? '#A8E6CF' : '#203A43'; // Mint for Dark, Deep Teal for Light
+  const iconColor = isDarkMode ? '#A8E6CF' : '#203A43';
   const iconBoxBg = isDarkMode ? 'rgba(168, 230, 207, 0.2)' : 'rgba(32, 58, 67, 0.1)';
 
-  // 1. Fetch the Order Data
   const { data: order, isLoading } = useQuery({
     queryKey: ['order', id],
     queryFn: async () => {
@@ -45,12 +44,6 @@ export default function OrderDetailScreen() {
     },
   });
 
-  // 2. Payment Mutation (Simulated)
-  // const { mutate: proceedToPayment, isPending: isPaying } = useMutation({
-  //   mutationFn: async () => {
-  //     const { error } = await supabase.from('Orders').update({ status: 'preparing' }).eq('id', id);
-  //     if (error) throw error;
-  //   },
   const { mutate: proceedToPayment, isPending: isPaying } = useMutation({
     mutationFn: async () => {
       if (!deliveryInfo) {
@@ -80,38 +73,28 @@ export default function OrderDetailScreen() {
 
   const { mutate: cancelOrder, isPending: isCancelling } = useMutation({
     mutationFn: async () => {
-      const { error } = await supabase
-        .from('Orders')
-        .update({ status: 'cancelled' }) // Update status instead of deleting row
-        .eq('id', id);
+      const { error } = await supabase.from('Orders').update({ status: 'cancelled' }).eq('id', id);
       if (error) throw error;
     },
     onSuccess: () => {
-      // 1. Refresh the specific order data
       queryClient.invalidateQueries({ queryKey: ['order', id] });
-      // 2. Refresh the main orders list
       queryClient.invalidateQueries({ queryKey: ['orders'] });
 
       Alert.alert('Success', 'Your order has been cancelled.');
 
-      // Optional: Stay on page to see the 'CANCELLED' status,
-      // or go back to the list
       router.replace('/(home)/orders');
     },
   });
-
-  // app/order/[id].tsx
 
   const { mutate: repeatOrder, isPending: isRepeating } = useMutation({
     mutationFn: async () => {
       if (!order) return;
 
-      // Create a new order object based on the current one
       const newOrder = {
         user_id: order.user_id,
-        orderItems: order.orderItems, // Copying the items array
+        orderItems: order.orderItems,
         total_price: order.total_price,
-        status: 'new', // New orders start as 'new'
+        status: 'new',
         created_at: new Date().toISOString(),
       };
 
@@ -121,7 +104,6 @@ export default function OrderDetailScreen() {
       return data;
     },
     onSuccess: (data) => {
-      // Refresh the list and go to the new order detail
       queryClient.invalidateQueries({ queryKey: ['orders'] });
       Alert.alert('Success', 'Order repeated! You can now proceed to payment.');
       router.push(`/order/${data.id}` as any);
@@ -143,7 +125,6 @@ export default function OrderDetailScreen() {
           styles.scrollContent,
           { paddingBottom: insets.bottom + 140 }, // Increased padding for safety
         ]}>
-        {/* Professional Summary Header */}
         <View style={styles.summaryHeader}>
           <View>
             <ThemedText style={styles.orderNumberTitle}>ORDER ID</ThemedText>
@@ -178,7 +159,6 @@ export default function OrderDetailScreen() {
 
         <ThemedText style={styles.sectionTitle}>Items Ordered</ThemedText>
 
-        {/* Items Mapping */}
         {order?.orderItems?.map((item: any, index: number) => (
           <View key={index} style={styles.itemRow}>
             <Image source={{ uri: item.image }} style={styles.itemImage} />
@@ -249,11 +229,7 @@ export default function OrderDetailScreen() {
             style={styles.locationPicker}
             onPress={() => order?.status === 'new' && setIsMapVisible(true)}>
             <View style={[styles.iconBox, { backgroundColor: iconBoxBg }]}>
-              <Ionicons
-                name="location"
-                size={22}
-                color={iconColor} // Explicitly high-contrast
-              />
+              <Ionicons name="location" size={22} color={iconColor} />
             </View>
 
             <ThemedText style={[styles.locationText, { color: theme.text }]} numberOfLines={2}>
@@ -284,52 +260,37 @@ export default function OrderDetailScreen() {
             backgroundColor: isDarkMode ? '#0F2027' : '#F0F4F5',
           },
         ]}>
-        {/* Option A: Status is NEW -> Show Pay Button */}
         {order?.status === 'new' && (
           <Pressable
-            style={styles.payButton}
-            onPress={() => proceedToPayment()}
-            disabled={isPaying}>
+            style={[styles.payButton, isPayDisabled && styles.payButtonDisabled]}
+            onPress={() => proceedToPayment(deliveryInfo)}
+            disabled={isPayDisabled}>
             {isPaying ? (
               <ActivityIndicator color="white" />
             ) : (
-              <ThemedText style={styles.payText}>
-                {`Pay Now • $${order?.total_price.toFixed(2)}`}
+              <ThemedText style={[styles.payText, isPayDisabled && { opacity: 0.7 }]}>
+                {isLocationMissing
+                  ? 'Select Location to Pay'
+                  : `Pay Now • $${order?.total_price.toFixed(2)}`}
               </ThemedText>
             )}
           </Pressable>
         )}
 
-        {/* Option B: Status is DELIVERED or CANCELLED -> Show Repeat Button */}
-        {order?.status === 'new' && (
-          <View
-            style={[
-              styles.footer,
-              {
-                borderTopColor: isDarkMode ? '#333' : '#eee',
-                paddingBottom: insets.bottom + 65,
-                backgroundColor: isDarkMode ? '#0F2027' : '#F0F4F5',
-              },
-            ]}>
-            <Pressable
-              style={[
-                styles.payButton,
-                isPayDisabled && styles.payButtonDisabled, // Apply disabled styles
-              ]}
-              onPress={() => proceedToPayment(deliveryInfo)}
-              disabled={isPayDisabled} // Disable touch interaction
-            >
-              {isPaying ? (
-                <ActivityIndicator color="white" />
-              ) : (
-                <ThemedText style={[styles.payText, isPayDisabled && { opacity: 0.6 }]}>
-                  {isLocationMissing
-                    ? 'Select Location to Pay'
-                    : `Pay Now • $${order?.total_price.toFixed(2)}`}
-                </ThemedText>
-              )}
-            </Pressable>
-          </View>
+        {(order?.status === 'delivered' || order?.status === 'cancelled') && (
+          <Pressable
+            style={[styles.repeatButton, isRepeating && { opacity: 0.7 }]}
+            onPress={() => repeatOrder()}
+            disabled={isRepeating}>
+            {isRepeating ? (
+              <ActivityIndicator color="white" />
+            ) : (
+              <>
+                <Ionicons name="refresh-outline" size={20} color="white" />
+                <ThemedText style={styles.payText}>Repeat Order</ThemedText>
+              </>
+            )}
+          </Pressable>
         )}
       </View>
     </ThemedView>
@@ -340,8 +301,6 @@ const styles = StyleSheet.create({
   container: { flex: 1 },
   loader: { flex: 1, justifyContent: 'center' },
   scrollContent: { padding: 20 },
-
-  // NEW HEADER STYLES
   summaryHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -372,8 +331,6 @@ const styles = StyleSheet.create({
     fontWeight: '800',
     letterSpacing: 0.5,
   },
-
-  // REFINED SECTION STYLES
   sectionTitle: {
     fontSize: 16,
     fontWeight: '700',
@@ -383,7 +340,7 @@ const styles = StyleSheet.create({
   itemRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 20, // More breathing room
+    marginBottom: 20,
   },
   itemImage: {
     width: 60,
@@ -401,8 +358,6 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(128,128,128,0.1)',
     marginVertical: 24,
   },
-
-  // FOOTER & TOTALS
   totalContainer: {
     backgroundColor: 'rgba(128,128,128,0.05)',
     padding: 20,
@@ -417,9 +372,8 @@ const styles = StyleSheet.create({
     borderTopColor: 'rgba(128,128,128,0.1)',
   },
   totalText: { fontSize: 20, fontWeight: '900' },
-
   payButton: {
-    backgroundColor: '#2ecc71', // Bright green when active
+    backgroundColor: '#2ecc71',
     padding: 18,
     borderRadius: 18,
     alignItems: 'center',
@@ -430,8 +384,8 @@ const styles = StyleSheet.create({
     elevation: 5,
   },
   payButtonDisabled: {
-    backgroundColor: '#95a5a6', // Greyish-slate when disabled
-    shadowOpacity: 0, // Remove shadow to look "flat"
+    backgroundColor: '#95a5a6',
+    shadowOpacity: 0,
     elevation: 0,
   },
   payText: {
@@ -439,8 +393,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '800',
   },
-
-  // CANCEL BUTTON (Subtle look)
   cancelContainer: { marginTop: 20, alignItems: 'center' },
   cancelButton: {
     flexDirection: 'row',
@@ -451,7 +403,7 @@ const styles = StyleSheet.create({
   cancelText: { color: '#ff6347', fontWeight: '700', fontSize: 14 },
   cancelHint: { fontSize: 11, opacity: 0.4, marginTop: 4 },
   repeatButton: {
-    backgroundColor: '#203A43', // Deep Forest Teal from your theme
+    backgroundColor: '#203A43',
     padding: 18,
     borderRadius: 16,
     flexDirection: 'row',
@@ -464,8 +416,6 @@ const styles = StyleSheet.create({
     shadowRadius: 5,
     elevation: 4,
   },
-
-  // Update footer to ensure it has a background so it covers the scroll view
   footer: {
     padding: 20,
     borderTopWidth: 1,
@@ -480,28 +430,28 @@ const styles = StyleSheet.create({
   },
   locationPicker: {
     flexDirection: 'row',
-    alignItems: 'center', // Vertically centers all children in the row
+    alignItems: 'center',
     backgroundColor: 'rgba(128,128,128,0.15)',
-    padding: 12, // Reduced padding slightly for tighter alignment
+    padding: 12,
     borderRadius: 16,
     borderWidth: 1,
     borderColor: 'rgba(128,128,128,0.1)',
     marginTop: 8,
     gap: 12,
-    minHeight: 64, // Ensures a consistent height
+    minHeight: 64,
   },
   iconBox: {
     width: 40,
     height: 40,
     borderRadius: 10,
-    justifyContent: 'center', // Vertical center for icon
-    alignItems: 'center', // Horizontal center for icon
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   locationText: {
     flex: 1,
     fontSize: 15,
     fontWeight: '600',
-    lineHeight: 20, // Helps with vertical centering of multi-line text
+    lineHeight: 20,
   },
   locationActionText: {
     fontSize: 12,

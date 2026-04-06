@@ -1,29 +1,24 @@
-/**
- * Below are the colors that are used in the app. The colors are defined in the light and dark mode.
- * There are many other ways to style your app. For example, [Nativewind](https://www.nativewind.dev/), [Tamagui](https://tamagui.dev/), [unistyles](https://reactnativeunistyles.vercel.app), etc.
- */
-
 import { Platform } from 'react-native';
 
-const tintColorLight = '#203A43'; // Deep Forest Main Teal
-const tintColorDark = '#A8E6CF'; // Minty Green for Dark Mode visibility
+const tintColorLight = '#203A43';
+const tintColorDark = '#A8E6CF';
 
 export const Colors = {
   light: {
-    text: '#0F2027', // Darkest Forest for text
-    background: '#F0F4F5', // Ice White/Soft Blue background
+    text: '#0F2027',
+    background: '#F0F4F5',
     tint: tintColorLight,
     tabIconDefault: '#9BA3A7',
     tabIconSelected: tintColorLight,
     icon: '#687076',
-    buttonBackground: '#E5E9EB', // Светло-серый, чуть темнее основного фона
+    buttonBackground: '#E5E9EB',
     link: '#2C5E6E',
   },
   dark: {
-    text: '#D1F2EB', // Off-white for readability
-    background: '#0F2027', // Deep Forest Base
-    tint: tintColorDark, // Minty highlight
-    tabIconDefault: '#52616B', // Subdued slate
+    text: '#D1F2EB',
+    background: '#0F2027',
+    tint: tintColorDark,
+    tabIconDefault: '#52616B',
     tabIconSelected: tintColorDark,
     buttonBackground: '#2C3545',
     icon: '#9BA1A6',

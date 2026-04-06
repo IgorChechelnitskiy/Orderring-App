@@ -1,4 +1,3 @@
-// components/location-picker-modal.tsx
 import React, { useEffect, useState } from 'react';
 import { Alert, Modal, Pressable, StyleSheet, View } from 'react-native';
 import MapView, { Marker, PROVIDER_GOOGLE } from 'react-native-maps';
@@ -13,7 +12,6 @@ export function LocationPickerModal({ visible, onClose, onSelect }: any) {
   useEffect(() => {
     if (visible) {
       (async () => {
-        // 1. Request Foreground Permissions
         const { status } = await Location.requestForegroundPermissionsAsync();
 
         if (status !== 'granted') {
@@ -21,11 +19,10 @@ export function LocationPickerModal({ visible, onClose, onSelect }: any) {
             'Permission Denied',
             'We need location access to show where to deliver your food.',
           );
-          onClose(); // Close modal if they say no
+          onClose();
           return;
         }
 
-        // 2. Get the actual position
         try {
           const location = await Location.getCurrentPositionAsync({
             accuracy: Location.Accuracy.Balanced,
@@ -46,11 +43,10 @@ export function LocationPickerModal({ visible, onClose, onSelect }: any) {
         }
       })();
     }
-  }, [visible]);
+  }, [visible, onClose]);
 
   const handleConfirm = async () => {
     if (pickedLocation) {
-      // Reverse Geocode to get a readable address string
       const [address] = await Location.reverseGeocodeAsync(pickedLocation);
       const addressString = `${address.streetNumber || ''} ${address.street || ''}, ${address.city}`;
       onSelect({ ...pickedLocation, address: addressString });
