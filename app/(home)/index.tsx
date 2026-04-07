@@ -28,10 +28,6 @@ type ProductPromotion = {
   promotionDescription: string;
 };
 
-// function SearchSkeleton() {
-//   return null;
-// }
-
 export default function Page() {
   const { isDarkMode } = useThemeStore();
   const router = useRouter();

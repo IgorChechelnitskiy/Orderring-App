@@ -1,13 +1,18 @@
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { useSignIn } from '@clerk/expo';
-import { type Href, Link, useRouter } from 'expo-router';
+import { type Href, Link, Stack, useRouter } from 'expo-router';
 import React from 'react';
 import { Pressable, StyleSheet, TextInput, View } from 'react-native';
+import { useThemeStore } from '@/store/themeStore';
+import { Colors } from '@/constants/theme';
 
 export default function Page() {
   const { signIn, errors, fetchStatus } = useSignIn();
   const router = useRouter();
+
+  const { isDarkMode } = useThemeStore();
+  const theme = Colors[isDarkMode ? 'dark' : 'light'];
 
   const [emailAddress, setEmailAddress] = React.useState('');
   const [password, setPassword] = React.useState('');
@@ -76,14 +81,26 @@ export default function Page() {
   if (signIn.status === 'needs_client_trust') {
     return (
       <ThemedView style={styles.container}>
+        <Stack.Screen
+          options={{
+            headerShown: false,
+          }}
+        />
         <ThemedText type="title" style={[styles.title, { fontSize: 24, fontWeight: 'bold' }]}>
           Verify your account
         </ThemedText>
         <TextInput
-          style={styles.input}
+          style={[
+            styles.input,
+            {
+              backgroundColor: isDarkMode ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.03)',
+              borderColor: isDarkMode ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)',
+              color: theme.text,
+            },
+          ]}
+          placeholderTextColor={isDarkMode ? '#52616B' : '#9BA3A7'}
           value={code}
           placeholder="Enter your verification code"
-          placeholderTextColor="#666666"
           onChangeText={(code) => setCode(code)}
           keyboardType="numeric"
         />
@@ -116,17 +133,29 @@ export default function Page() {
 
   return (
     <ThemedView style={styles.container}>
+      <Stack.Screen
+        options={{
+          headerShown: false,
+        }}
+      />
       <ThemedText type="title" style={styles.title}>
         Sign in
       </ThemedText>
 
       <ThemedText style={styles.label}>Email address</ThemedText>
       <TextInput
-        style={styles.input}
+        style={[
+          styles.input,
+          {
+            backgroundColor: isDarkMode ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.03)',
+            borderColor: isDarkMode ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)',
+            color: theme.text,
+          },
+        ]}
+        placeholderTextColor={isDarkMode ? '#52616B' : '#9BA3A7'}
         autoCapitalize="none"
         value={emailAddress}
         placeholder="Enter email"
-        placeholderTextColor="#666666"
         onChangeText={(emailAddress) => setEmailAddress(emailAddress)}
         keyboardType="email-address"
       />
@@ -135,10 +164,17 @@ export default function Page() {
       )}
       <ThemedText style={styles.label}>Password</ThemedText>
       <TextInput
-        style={styles.input}
+        style={[
+          styles.input,
+          {
+            backgroundColor: isDarkMode ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.03)',
+            borderColor: isDarkMode ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)',
+            color: theme.text,
+          },
+        ]}
+        placeholderTextColor={isDarkMode ? '#52616B' : '#9BA3A7'}
         value={password}
         placeholder="Enter password"
-        placeholderTextColor="#666666"
         secureTextEntry={true}
         onChangeText={(password) => setPassword(password)}
       />
@@ -148,18 +184,21 @@ export default function Page() {
       <Pressable
         style={({ pressed }) => [
           styles.button,
-          (!emailAddress || !password || fetchStatus === 'fetching') && styles.buttonDisabled,
+          { backgroundColor: theme.tint },
+          fetchStatus === 'fetching' && styles.buttonDisabled,
           pressed && styles.buttonPressed,
         ]}
         onPress={handleSubmit}
-        disabled={!emailAddress || !password || fetchStatus === 'fetching'}>
-        <ThemedText style={styles.buttonText}>Continue</ThemedText>
+        disabled={fetchStatus === 'fetching'}>
+        <ThemedText style={[styles.buttonText, { color: isDarkMode ? '#0F2027' : '#FFFFFF' }]}>
+          {fetchStatus === 'fetching' ? 'Processing...' : 'Continue'}
+        </ThemedText>
       </Pressable>
 
       <View style={styles.linkContainer}>
         <ThemedText>Don&#39;t have an account? </ThemedText>
         <Link href="/sign-up">
-          <ThemedText type="link">Sign up</ThemedText>
+          <ThemedText style={{ color: theme.link, fontWeight: '700' }}>Sign up</ThemedText>
         </Link>
       </View>
     </ThemedView>
@@ -169,67 +208,75 @@ export default function Page() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 20,
-    gap: 12,
+    padding: 24,
+    justifyContent: 'center', // Centers the form for a pro look
+    gap: 16,
   },
   title: {
+    fontSize: 32,
+    fontWeight: '900',
     marginBottom: 8,
+    letterSpacing: -1,
   },
   label: {
-    fontWeight: '600',
+    fontWeight: '700',
     fontSize: 14,
+    marginBottom: -8,
+    opacity: 0.8,
   },
   input: {
     borderWidth: 1,
-    borderColor: '#ccc',
-    borderRadius: 8,
-    padding: 12,
+    borderRadius: 12,
+    padding: 16,
     fontSize: 16,
-    backgroundColor: '#fff',
+    // Colors will be applied inline via theme store
   },
   button: {
-    backgroundColor: '#0a7ea4',
-    paddingVertical: 12,
-    paddingHorizontal: 24,
-    borderRadius: 8,
+    paddingVertical: 16,
+    borderRadius: 12,
     alignItems: 'center',
-    marginTop: 8,
+    marginTop: 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
+    elevation: 4,
   },
   buttonPressed: {
-    opacity: 0.7,
+    opacity: 0.8,
+    transform: [{ scale: 0.98 }],
   },
   buttonDisabled: {
-    opacity: 0.5,
+    opacity: 0.4,
   },
   buttonText: {
-    color: '#fff',
-    fontWeight: '600',
+    color: '#0F2027', // Dark text on the light mint button
+    fontWeight: '800',
+    fontSize: 16,
+    textTransform: 'uppercase',
+    letterSpacing: 1,
   },
   secondaryButton: {
     paddingVertical: 12,
-    paddingHorizontal: 24,
-    borderRadius: 8,
     alignItems: 'center',
-    marginTop: 8,
-  },
-  secondaryButtonText: {
-    color: '#0a7ea4',
-    fontWeight: '600',
+    marginTop: 4,
   },
   linkContainer: {
     flexDirection: 'row',
-    gap: 4,
-    marginTop: 12,
+    gap: 6,
+    marginTop: 20,
+    justifyContent: 'center',
     alignItems: 'center',
   },
   error: {
-    color: '#d32f2f',
-    fontSize: 12,
-    marginTop: -8,
+    color: '#FF6B6B',
+    fontSize: 13,
+    fontWeight: '600',
+    marginTop: -4,
   },
-  debug: {
-    fontSize: 10,
-    opacity: 0.5,
-    marginTop: 8,
+  secondaryButtonText: {
+    fontSize: 15,
+    fontWeight: '700',
+    textAlign: 'center',
   },
 });
