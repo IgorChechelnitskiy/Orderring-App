@@ -1,13 +1,22 @@
 import React from 'react';
-import { ActivityIndicator, FlatList, Image, Pressable, StyleSheet, View } from 'react-native';
+import {
+  ActivityIndicator,
+  FlatList,
+  Image,
+  Pressable,
+  StyleSheet,
+  View
+} from 'react-native';
 import { useCartStore } from '@/store/cartStore';
 import { ThemedView } from '@/components/themed-view';
 import { ThemedText } from '@/components/themed-text';
 import { Ionicons } from '@expo/vector-icons';
 import { useCreateOrder } from '@/hooks/useCreateOrder';
+import { useAuth } from '@clerk/expo';
 
 export default function CartScreen() {
   const { items, removeItem, totalPrice } = useCartStore();
+  const { userId } = useAuth();
 
   const { mutate: createOrder, isPending } = useCreateOrder();
 
@@ -17,6 +26,7 @@ export default function CartScreen() {
     createOrder({
       items: items,
       total: totalPrice(),
+      user_id: userId || null,
     });
   };
 

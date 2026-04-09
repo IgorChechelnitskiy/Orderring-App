@@ -1,11 +1,11 @@
 import React from 'react';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
-import { Redirect, Tabs } from 'expo-router';
-import { useAuth } from '@clerk/expo';
+import { Tabs } from 'expo-router';
 
 import { Colors } from '@/constants/theme';
 import { useThemeStore } from '@/store/themeStore';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useAuth } from '@clerk/expo';
 
 function TabBarIcon(props: {
   name: React.ComponentProps<typeof FontAwesome>['name'];
@@ -15,18 +15,18 @@ function TabBarIcon(props: {
 }
 
 export default function TabLayout() {
-  const { isSignedIn, isLoaded } = useAuth();
+  const { isSignedIn } = useAuth();
   const insets = useSafeAreaInsets();
 
   const { isDarkMode } = useThemeStore();
   const colorScheme = isDarkMode ? 'dark' : 'light';
   const theme = Colors[colorScheme];
 
-  if (!isLoaded) return null;
+  // if (!isLoaded) return null;
 
-  if (!isSignedIn) {
-    return <Redirect href="/(auth)/sign-in" />;
-  }
+  // if (!isSignedIn) {
+  //   return <Redirect href="/(auth)/sign-in" />;
+  // }
 
   return (
     <Tabs
@@ -74,9 +74,17 @@ export default function TabLayout() {
         name="favorites"
         options={{
           title: 'Favorites',
+          href: isSignedIn ? undefined : null,
           tabBarIcon: ({ color }) => <TabBarIcon name="heart" color={color} />,
         }}
       />
+      {/*<Tabs.Screen*/}
+      {/*  name="favorites"*/}
+      {/*  options={{*/}
+      {/*    title: 'Favorites',*/}
+      {/*    tabBarIcon: ({ color }) => <TabBarIcon name="heart" color={color} />,*/}
+      {/*  }}*/}
+      {/*/>*/}
       <Tabs.Screen
         name="orders"
         options={{

@@ -10,6 +10,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useCartStore } from '@/store/cartStore';
 import { useToggleFavorite } from '@/hooks/useToggleFavorite';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useAuth } from '@clerk/expo';
 
 export default function DishDetailScreen() {
   const { id } = useLocalSearchParams();
@@ -19,6 +20,7 @@ export default function DishDetailScreen() {
   const addItem = useCartStore((state) => state.addItem);
   const { mutate: toggleFav } = useToggleFavorite();
   const insets = useSafeAreaInsets();
+  const { userId } = useAuth();
 
   const { data: dish, isLoading } = useQuery({
     queryKey: ['dish', id],
@@ -78,16 +80,18 @@ export default function DishDetailScreen() {
                 borderColor: isDarkMode ? '#333' : '#E0E0E0',
               },
             ]}>
-            <View style={styles.favoriteLeft}>
-              <Ionicons
-                name={dish?.isFavourite ? 'heart' : 'heart-outline'}
-                size={24}
-                color={dish?.isFavourite ? '#ff6347' : '#888'}
-              />
-              <ThemedText style={styles.favoriteText}>
-                {dish?.isFavourite ? 'Added to Favorites' : 'Add to Favorites'}
-              </ThemedText>
-            </View>
+            {userId && (
+              <View style={styles.favoriteLeft}>
+                <Ionicons
+                  name={dish?.isFavourite ? 'heart' : 'heart-outline'}
+                  size={24}
+                  color={dish?.isFavourite ? '#ff6347' : '#888'}
+                />
+                <ThemedText style={styles.favoriteText}>
+                  {dish?.isFavourite ? 'Added to Favorites' : 'Add to Favorites'}
+                </ThemedText>
+              </View>
+            )}
           </Pressable>
           <View style={styles.quantityContainer}>
             <Pressable onPress={() => setQuantity(Math.max(1, quantity - 1))} style={styles.qtyBtn}>

@@ -1,10 +1,17 @@
-import React from 'react';
-import { Image, Pressable, StyleSheet, View } from 'react-native';
+import React, { useState } from 'react';
+import {
+  ActivityIndicator,
+  Image,
+  Pressable,
+  StyleSheet,
+  View
+} from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { ThemedText } from './themed-text';
 import { useThemeStore } from '@/store/themeStore';
 import { useToggleFavorite } from '@/hooks/useToggleFavorite';
+import { useAuth } from '@clerk/expo';
 
 export type Dish = {
   id: number;
@@ -20,6 +27,10 @@ export function DishCard({ item }: { item: Dish }) {
   const { isDarkMode } = useThemeStore();
   const router = useRouter();
   const { mutate: toggleFav } = useToggleFavorite();
+  const { userId } = useAuth();
+
+  const [loading, setLoading] = useState(true);
+  const [imageError, setImageError] = useState(false);
 
   const ImagePlaceholder = () => (
     <View
@@ -46,25 +57,34 @@ export function DishCard({ item }: { item: Dish }) {
     <Pressable
       onPress={() => router.push({ pathname: '/dish/[id]', params: { id: item.id } })}
       style={[styles.dishCard, { backgroundColor: isDarkMode ? '#252D3A' : '#FFFFFF' }]}>
-      {item.imageUrl ? (
-        <Image source={{ uri: item.imageUrl }} style={styles.dishImage} />
+      {item.imageUrl && !imageError ? (
+        <View style={styles.dishImage}>
+          <Image
+            source={{ uri: item.imageUrl }}
+            style={styles.dishImage}
+            onLoadEnd={() => setLoading(false)}
+            onError={() => setImageError(true)}
+          />
+          {loading && !imageError && <ActivityIndicator style={StyleSheet.absoluteFill} />}
+        </View>
       ) : (
         <ImagePlaceholder />
       )}
-      <Pressable
-        onPress={(e) => {
-          e.stopPropagation();
-          console.log('Heart pressed for dish:', item.id); // 2. Debug check
-          toggleFav({ id: item.id, isFavourite: item.isFavourite });
-        }}
-        hitSlop={10}
-        style={styles.favButton}>
-        <Ionicons
-          name={item.isFavourite ? 'heart' : 'heart-outline'}
-          size={22}
-          color={item.isFavourite ? '#ff6347' : '#888'}
-        />
-      </Pressable>
+      {userId && (
+        <Pressable
+          onPress={(e) => {
+            e.stopPropagation();
+            toggleFav({ id: item.id, isFavourite: item.isFavourite });
+          }}
+          hitSlop={10}
+          style={styles.favButton}>
+          <Ionicons
+            name={item.isFavourite ? 'heart' : 'heart-outline'}
+            size={22}
+            color={item.isFavourite ? '#ff6347' : '#888'}
+          />
+        </Pressable>
+      )}
       <View style={styles.dishInfo}>
         <ThemedText style={styles.dishName}>{item.dishName}</ThemedText>
         <ThemedText style={styles.dishDesc} numberOfLines={2}>
@@ -102,7 +122,7 @@ const styles = StyleSheet.create({
   favButton: {
     position: 'absolute',
     top: 8,
-    left: 8, // Or right: 8, depending on your preference
+    left: 8,
     backgroundColor: 'rgba(255,255,255,0.8)',
     borderRadius: 15,
     padding: 4,

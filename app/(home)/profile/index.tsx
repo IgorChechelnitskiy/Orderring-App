@@ -24,6 +24,8 @@ export default function ProfileScreen() {
   const activeColors = Colors[theme];
   const [isNotificationsOn, setIsNotificationsOn] = useState(true);
 
+  const isGuest = !user;
+
   const MenuRow = ({
     icon,
     title,
@@ -54,23 +56,42 @@ export default function ProfileScreen() {
         <View style={styles.mainContent}>
           <View style={styles.header}>
             <View style={styles.avatarWrapper}>
-              <Image source={{ uri: user?.imageUrl }} style={styles.avatar} />
+              {isGuest ? (
+                <View
+                  style={[
+                    styles.avatar,
+                    styles.guestAvatarPlaceholder,
+                    { backgroundColor: isDarkMode ? '#2C2C2E' : '#E5E5EA' },
+                  ]}>
+                  <Ionicons name="person" size={40} color={isDarkMode ? '#8E8E93' : '#AEAEB2'} />
+                </View>
+              ) : (
+                <Image source={{ uri: user?.imageUrl }} style={styles.avatar} />
+              )}
             </View>
             <View style={styles.userInfo}>
-              <ThemedText style={styles.userName}>{user?.fullName}</ThemedText>
-              <ThemedText style={styles.joinedDate}>Member since 2024</ThemedText>
+              <ThemedText style={styles.userName}>
+                {isGuest ? 'Guest User' : user?.fullName || user?.username}
+              </ThemedText>
+              <ThemedText style={styles.joinedDate}>
+                {isGuest ? 'Sign in to sync data' : 'Member since 2024'}
+              </ThemedText>
             </View>
           </View>
 
-          <ThemedText style={styles.sectionLabel}>Profile</ThemedText>
+          <ThemedText style={styles.sectionLabel}>Account</ThemedText>
           <View style={styles.sectionCard}>
             <MenuRow
-              icon="person-outline"
-              title="Manage user"
+              icon={isGuest ? 'log-in-outline' : 'person-outline'}
+              title={isGuest ? 'Log-in / Sign-up' : 'Manage user'}
               iconColor="#FF9500"
               bgColor={isDarkMode ? '#2C2010' : '#FFF9F2'}
               onPressAction={() => {
-                router.push('/profile/userConfiguration');
+                if (isGuest) {
+                  router.push('/(auth)/sign-in');
+                } else {
+                  router.push('/profile/userConfiguration');
+                }
               }}
             />
           </View>
@@ -111,13 +132,15 @@ export default function ProfileScreen() {
           </View>
         </View>
 
-        <View style={styles.bottomContent}>
-          <Pressable
-            style={[styles.signOutButton, { backgroundColor: activeColors.buttonBackground }]}
-            onPress={() => signOut()}>
-            <ThemedText style={styles.signOutText}>Sign Out</ThemedText>
-          </Pressable>
-        </View>
+        {!isGuest && (
+          <View style={styles.bottomContent}>
+            <Pressable
+              style={[styles.signOutButton, { backgroundColor: activeColors.buttonBackground }]}
+              onPress={() => signOut()}>
+              <ThemedText style={styles.signOutText}>Sign Out</ThemedText>
+            </Pressable>
+          </View>
+        )}
       </ScrollView>
     </ThemedView>
   );
@@ -136,6 +159,12 @@ const styles = StyleSheet.create({
   header: { flexDirection: 'row', alignItems: 'center', marginBottom: 40 },
   avatarWrapper: { position: 'relative' },
   avatar: { width: 80, height: 80, borderRadius: 40 },
+  guestAvatarPlaceholder: {
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: 'rgba(128,128,128,0.2)',
+  },
   userInfo: { marginLeft: 20 },
   userName: { fontSize: 22, fontWeight: '700' },
   joinedDate: { fontSize: 14, color: '#8E8E93', marginTop: 4 },

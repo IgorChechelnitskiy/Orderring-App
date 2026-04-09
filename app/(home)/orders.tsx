@@ -15,23 +15,49 @@ import { router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useThemeStore } from '@/store/themeStore';
 import { OrderCardSkeleton } from '@/components/order-card-skeleton';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { Ionicons } from '@expo/vector-icons';
 
 export default function OrdersScreen() {
-  const { userId } = useAuth();
+  const { userId, isLoaded } = useAuth();
   const insets = useSafeAreaInsets();
   const { isDarkMode } = useThemeStore();
+
+  // const { data: orders, isLoading } = useQuery({
+  //   queryKey: ['orders', userId],
+  //   queryFn: async () => {
+  //     const { data, error } = await supabase
+  //       .from('Orders')
+  //       .select('*')
+  //       .eq('user_id', userId)
+  //       .order('created_at', { ascending: false });
+  //     if (error) throw error;
+  //     return data;
+  //   },
+  // });
 
   const { data: orders, isLoading } = useQuery({
     queryKey: ['orders', userId],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('Orders')
-        .select('*')
-        .eq('user_id', userId)
-        .order('created_at', { ascending: false });
+      let query = supabase.from('Orders').select('*');
+
+      if (userId) {
+        // CASE 1: Authenticated User - Get all their history
+        query = query.eq('user_id', userId);
+      } else {
+        // CASE 2: Guest User - Get only the order ID stored on this device
+        const guestOrderId = await AsyncStorage.getItem('last_guest_order_id');
+
+        if (!guestOrderId) return []; // No orders yet
+
+        query = query.eq('id', guestOrderId);
+      }
+
+      const { data, error } = await query.order('created_at', { ascending: false });
       if (error) throw error;
       return data;
     },
+    enabled: isLoaded, // Don't run until Auth state is known
   });
 
   if (isLoading) return <ActivityIndicator style={{ flex: 1 }} />;
@@ -69,10 +95,24 @@ export default function OrdersScreen() {
             <OrderCardSkeleton key={i} />
           ))}
         </View>
+      ) : orders?.length === 0 ? ( // Removed the extra ({ and )
+        <View style={styles.emptyContainer}>
+          <Ionicons name="fast-food-outline" size={80} color="#ccc" />
+          <ThemedText style={styles.emptyTitle}>No active orders</ThemedText>
+          <ThemedText style={styles.emptySubtitle}>
+            {userId
+              ? "You haven't ordered anything yet."
+              : 'Guest orders appear here after checkout.'}
+          </ThemedText>
+          <Pressable style={styles.goButton} onPress={() => router.push('/')}>
+            <ThemedText style={{ color: '#fff' }}>Browse Menu</ThemedText>
+          </Pressable>
+        </View>
       ) : (
         <FlatList
           data={orders}
           keyExtractor={(item) => item.id}
+          contentContainerStyle={{ padding: 16, paddingBottom: insets.bottom + 60 }}
           renderItem={({ item }) => {
             const isCancelled = item.status === 'cancelled';
             const statusStyle = getStatusStyles(item.status, isDarkMode);
@@ -107,7 +147,6 @@ export default function OrdersScreen() {
               </Pressable>
             );
           }}
-          contentContainerStyle={{ padding: 16, paddingBottom: insets.bottom + 60 }}
         />
       )}
     </ThemedView>
@@ -164,5 +203,42 @@ const styles = StyleSheet.create({
     marginTop: 12,
     textAlign: 'right',
     fontSize: 16,
+  },
+  emptyContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 40,
+    marginTop: -60, // Centers it visually on the screen
+  },
+  emptyTitle: {
+    fontSize: 20,
+    fontWeight: '700',
+    marginTop: 20,
+    textAlign: 'center',
+  },
+  emptySubtitle: {
+    fontSize: 15,
+    opacity: 0.6,
+    textAlign: 'center',
+    marginTop: 10,
+    lineHeight: 22,
+  },
+  goButton: {
+    marginTop: 30,
+    backgroundColor: '#2ecc71', // Match your branding
+    paddingVertical: 14,
+    paddingHorizontal: 32,
+    borderRadius: 16,
+    shadowColor: '#2ecc71',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
+    elevation: 3,
+  },
+  goButtonText: {
+    color: '#FFF',
+    fontSize: 16,
+    fontWeight: '700',
   },
 });
