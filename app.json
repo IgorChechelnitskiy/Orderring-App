@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "react-native-ordering",
+    "name": "FoodDash",
     "slug": "react-native-ordering",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -10,10 +10,12 @@
     "backgroundColor": "#0F2027",
     "userInterfaceStyle": "automatic",
     "ios": {
+      "bundleIdentifier": "com.igor.fooddash",
       "supportsTablet": true,
       "backgroundColor": "#0F2027"
     },
     "android": {
+      "package": "com.igor.fooddash",
       "backgroundColor": "#0F2027",
       "adaptiveIcon": {
         "backgroundColor": "#E6F4FE",
