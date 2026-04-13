@@ -111,12 +111,6 @@ export default function TabLayout() {
           href: null,
         }}
       />
-      <Tabs.Screen
-        name="dish/[id]"
-        options={{
-          href: null,
-        }}
-      />
     </Tabs>
   );
 }

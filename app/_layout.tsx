@@ -12,7 +12,6 @@ import { RootSiblingParent } from 'react-native-root-siblings';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import { StripeProvider } from '@stripe/stripe-react-native';
 
 import { Colors } from '@/constants/theme';
 import { useThemeStore } from '@/store/themeStore';
@@ -78,115 +77,101 @@ export default function RootLayout() {
   return (
     <ClerkProvider publishableKey={publishableKey} tokenCache={tokenCache}>
       <QueryClientProvider client={queryClient}>
-        <StripeProvider
-          publishableKey={process.env.EXPO_PUBLIC_STRIPE_PUBLISHABLE_KEY || ''}
-          merchantIdentifier="">
-          <RootSiblingParent>
-            <ThemeProvider value={NavigationTheme}>
-              <View
-                style={{
-                  flex: 1,
-                  backgroundColor: theme.background,
-                }}>
-                {shouldShowHeader && (
-                  <View
-                    style={[
-                      styles.headerContainer,
-                      {
-                        backgroundColor: theme.background,
-                        paddingTop: insets.top + (Platform.OS === 'android' ? 10 : 0),
-                      },
-                    ]}>
-                    <View style={styles.headerTopRow}>
-                      <Pressable
-                        onPress={() => {
-                          if (showBackButton) {
-                            if (isOrderPage) {
-                              router.replace('/(home)/orders');
-                            } else {
-                              router.back();
-                            }
+        <RootSiblingParent>
+          <ThemeProvider value={NavigationTheme}>
+            <View
+              style={{
+                flex: 1,
+                backgroundColor: theme.background,
+              }}>
+              {shouldShowHeader && (
+                <View
+                  style={[
+                    styles.headerContainer,
+                    {
+                      backgroundColor: theme.background,
+                      paddingTop: insets.top + (Platform.OS === 'android' ? 10 : 0),
+                    },
+                  ]}>
+                  <View style={styles.headerTopRow}>
+                    <Pressable
+                      onPress={() => {
+                        if (showBackButton) {
+                          if (isOrderPage) {
+                            router.replace('/(home)/orders');
                           } else {
-                            setIsSearchVisible(!isSearchVisible);
-                            setQuery('');
+                            router.back();
                           }
-                        }}
-                        style={styles.iconButton}>
-                        <Ionicons
-                          name={
-                            showBackButton
-                              ? 'chevron-back'
-                              : isSearchVisible
-                                ? 'close'
-                                : 'search-outline'
-                          }
-                          size={26}
-                          color={theme.text}
-                        />
-                      </Pressable>
+                        } else {
+                          setIsSearchVisible(!isSearchVisible);
+                          setQuery('');
+                        }
+                      }}
+                      style={styles.iconButton}>
+                      <Ionicons
+                        name={
+                          showBackButton
+                            ? 'chevron-back'
+                            : isSearchVisible
+                              ? 'close'
+                              : 'search-outline'
+                        }
+                        size={26}
+                        color={theme.text}
+                      />
+                    </Pressable>
 
-                      <View style={styles.logoCenterContainer} pointerEvents="box-none">
-                        <FoodDashLogo />
-                      </View>
-
-                      <Link href="/cart" asChild>
-                        <Pressable style={styles.iconButton}>
-                          <Ionicons name="cart-outline" size={26} color={theme.text} />
-                          {totalCount > 0 && (
-                            <View style={[styles.badge, { borderColor: theme.background }]}>
-                              <ThemedText style={styles.badgeText}>
-                                {totalCount > 9 ? '9+' : totalCount}
-                              </ThemedText>
-                            </View>
-                          )}
-                        </Pressable>
-                      </Link>
+                    <View style={styles.logoCenterContainer} pointerEvents="box-none">
+                      <FoodDashLogo />
                     </View>
 
-                    {isSearchVisible && !showBackButton && (
-                      <View style={styles.searchBarContainer}>
-                        <Ionicons name="search" size={18} color="#888" style={{ marginRight: 8 }} />
-                        <TextInput
-                          style={[styles.searchInput, { color: theme.text }]}
-                          placeholder="Search dishes..."
-                          placeholderTextColor="#888"
-                          value={query}
-                          onChangeText={setQuery}
-                          autoFocus
-                          returnKeyType="search"
-                        />
-                      </View>
-                    )}
+                    <Link href="/cart" asChild>
+                      <Pressable style={styles.iconButton}>
+                        <Ionicons name="cart-outline" size={26} color={theme.text} />
+                        {totalCount > 0 && (
+                          <View style={[styles.badge, { borderColor: theme.background }]}>
+                            <ThemedText style={styles.badgeText}>
+                              {totalCount > 9 ? '9+' : totalCount}
+                            </ThemedText>
+                          </View>
+                        )}
+                      </Pressable>
+                    </Link>
                   </View>
-                )}
 
-                <Stack screenOptions={{ headerShown: false }}>
-                  <Stack.Screen name="(home)" />
-                  <Stack.Screen
-                    name="category/[id]"
-                    options={{
-                      headerShown: true,
-                      headerTitle: '',
-                      headerShadowVisible: false,
-                      headerStyle: { backgroundColor: theme.background },
-                      headerTintColor: theme.text,
-                    }}
-                  />
-                  <Stack.Screen
-                    name="cart"
-                    options={{
-                      headerShown: true,
-                      presentation: 'modal',
-                      title: 'Your Cart',
-                      headerStyle: { backgroundColor: theme.background },
-                      headerTintColor: theme.text,
-                    }}
-                  />
-                </Stack>
-              </View>
-            </ThemeProvider>
-          </RootSiblingParent>
-        </StripeProvider>
+                  {isSearchVisible && !showBackButton && (
+                    <View style={styles.searchBarContainer}>
+                      <Ionicons name="search" size={18} color="#888" style={{ marginRight: 8 }} />
+                      <TextInput
+                        style={[styles.searchInput, { color: theme.text }]}
+                        placeholder="Search dishes..."
+                        placeholderTextColor="#888"
+                        value={query}
+                        onChangeText={setQuery}
+                        autoFocus
+                        returnKeyType="search"
+                      />
+                    </View>
+                  )}
+                </View>
+              )}
+
+              <Stack screenOptions={{ headerShown: false }}>
+                <Stack.Screen name="(home)" />
+                <Stack.Screen
+                  name="cart"
+                  options={{
+                    headerShown: true,
+                    presentation: 'modal',
+                    title: 'Your Cart',
+                    headerStyle: { backgroundColor: theme.background },
+                    headerTintColor: theme.text,
+                  }}
+                />
+              </Stack>
+            </View>
+          </ThemeProvider>
+        </RootSiblingParent>
       </QueryClientProvider>
     </ClerkProvider>
   );
