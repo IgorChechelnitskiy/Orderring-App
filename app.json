@@ -16,6 +16,9 @@
     },
     "android": {
       "package": "com.igor.fooddash",
+      "compileSdkVersion": 35,
+      "targetSdkVersion": 35,
+      "buildToolsVersion": "35.0.0",
       "backgroundColor": "#0F2027",
       "adaptiveIcon": {
         "backgroundColor": "#E6F4FE",
@@ -55,6 +58,12 @@
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "948f0475-3aff-436b-9dba-da0b276a73be"
+      }
     }
   }
 }
