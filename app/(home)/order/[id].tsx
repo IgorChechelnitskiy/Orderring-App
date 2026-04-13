@@ -3,9 +3,13 @@ import {
   ActivityIndicator,
   Alert,
   Image,
+  KeyboardAvoidingView,
+  Modal,
+  Platform,
   Pressable,
   ScrollView,
   StyleSheet,
+  TextInput,
   View,
 } from 'react-native';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
@@ -29,11 +33,17 @@ export default function OrderDetailScreen() {
 
   const [isMapVisible, setIsMapVisible] = useState(false);
   const [deliveryInfo, setDeliveryInfo] = useState<any>(null);
+  const [isPaymentModalVisible, setIsPaymentModalVisible] = useState(false);
+  const [cardDetails, setCardDetails] = useState({ number: '', expiry: '', cvc: '' });
 
   const currentTheme = isDarkMode ? 'dark' : 'light';
   const theme = Colors[currentTheme];
   const iconColor = isDarkMode ? '#A8E6CF' : '#203A43';
   const iconBoxBg = isDarkMode ? 'rgba(168, 230, 207, 0.2)' : 'rgba(32, 58, 67, 0.1)';
+
+  const simulatePaymentNetwork = async () => {
+    return new Promise((resolve) => setTimeout(resolve, 2500));
+  };
 
   const { data: order, isLoading } = useQuery({
     queryKey: ['order', id],
@@ -44,32 +54,43 @@ export default function OrderDetailScreen() {
     },
   });
 
-  const { mutate: proceedToPayment, isPending: isPaying } = useMutation({
+  const { mutate: finalizeOrder, isPending: isPaying } = useMutation({
     mutationFn: async () => {
-      if (!deliveryInfo) {
-        Alert.alert('Hold on!', 'Please select a delivery location first.');
-        throw new Error('No location');
-      }
+      await simulatePaymentNetwork();
+
       const { error } = await supabase
         .from('Orders')
         .update({
           status: 'preparing',
-          delivery_address: deliveryInfo.address,
-          latitude: deliveryInfo.latitude,
-          longitude: deliveryInfo.longitude,
+          delivery_address: deliveryInfo?.address || order?.delivery_address,
+          latitude: deliveryInfo?.latitude || order?.latitude,
+          longitude: deliveryInfo?.longitude || order?.longitude,
         })
         .eq('id', id);
       if (error) throw error;
     },
     onSuccess: () => {
+      setIsPaymentModalVisible(false);
       queryClient.invalidateQueries({ queryKey: ['order', id] });
       queryClient.invalidateQueries({ queryKey: ['orders'] });
-      alert('Payment Successful! Restaurant is preparing your food.');
+      Alert.alert('Payment Successful!', 'The restaurant is now preparing your food. 🍔');
+    },
+    onError: (err) => {
+      Alert.alert('Payment Failed', 'Check your connection and try again.');
+      console.error(err);
     },
   });
 
   const isLocationMissing = !deliveryInfo && !order?.delivery_address;
   const isPayDisabled = isPaying || isLocationMissing || order?.status !== 'new';
+
+  const handlePayPress = () => {
+    if (isLocationMissing) {
+      Alert.alert('Location Required', 'Please set your delivery address first.');
+      return;
+    }
+    setIsPaymentModalVisible(true);
+  };
 
   const { mutate: cancelOrder, isPending: isCancelling } = useMutation({
     mutationFn: async () => {
@@ -114,6 +135,31 @@ export default function OrderDetailScreen() {
     },
   });
 
+  const isFormValid =
+    cardDetails.number.replace(/\s/g, '').length === 16 &&
+    cardDetails.expiry.length === 5 &&
+    cardDetails.cvc.length === 3;
+
+  const formatCardNumber = (text: string) => {
+    const cleaned = text.replace(/\D/g, '');
+    const limited = cleaned.slice(0, 16);
+    const matched = limited.match(/.{1,4}/g);
+    return matched ? matched.join(' ') : limited;
+  };
+
+  const formatExpiry = (text: string) => {
+    const cleaned = text.replace(/\D/g, '');
+    const limited = cleaned.slice(0, 4);
+    if (limited.length >= 3) {
+      return `${limited.slice(0, 2)}/${limited.slice(2)}`;
+    }
+    return limited;
+  };
+
+  const formatCVC = (text: string) => {
+    return text.replace(/\D/g, '').slice(0, 3);
+  };
+
   if (isLoading) return <ActivityIndicator size="large" style={styles.loader} />;
 
   return (
@@ -121,10 +167,7 @@ export default function OrderDetailScreen() {
       <Stack.Screen options={{ title: 'Order Summary', headerBackTitle: 'Back' }} />
 
       <ScrollView
-        contentContainerStyle={[
-          styles.scrollContent,
-          { paddingBottom: insets.bottom + 140 }, // Increased padding for safety
-        ]}>
+        contentContainerStyle={[styles.scrollContent, { paddingBottom: insets.bottom + 140 }]}>
         <View style={styles.summaryHeader}>
           <View>
             <ThemedText style={styles.orderNumberTitle}>ORDER ID</ThemedText>
@@ -245,6 +288,81 @@ export default function OrderDetailScreen() {
         </View>
       </ScrollView>
 
+      <Modal visible={isPaymentModalVisible} animationType="slide" transparent={true}>
+        <KeyboardAvoidingView
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+          style={styles.modalOverlay}>
+          <View style={[styles.modalContent, { backgroundColor: theme.background }]}>
+            <View style={styles.modalHeader}>
+              <ThemedText style={styles.modalTitle}>Payment Method</ThemedText>
+              <Pressable onPress={() => !isPaying && setIsPaymentModalVisible(false)}>
+                <Ionicons name="close" size={24} color={theme.text} />
+              </Pressable>
+            </View>
+
+            <View style={styles.paymentForm}>
+              <ThemedText style={styles.inputLabel}>Card Number</ThemedText>
+              <TextInput
+                style={[styles.input, { color: theme.text, borderColor: iconBoxBg }]}
+                placeholder="4242 4242 4242 4242"
+                placeholderTextColor="#888"
+                keyboardType="numeric"
+                value={cardDetails.number}
+                onChangeText={(v) =>
+                  setCardDetails({ ...cardDetails, number: formatCardNumber(v) })
+                }
+              />
+
+              <View style={{ flexDirection: 'row', gap: 15 }}>
+                <View style={{ flex: 1 }}>
+                  <ThemedText style={styles.inputLabel}>Expire Date</ThemedText>
+                  <TextInput
+                    style={[styles.input, { color: theme.text, borderColor: iconBoxBg }]}
+                    placeholder="MM/YY"
+                    placeholderTextColor="#888"
+                    keyboardType="numeric"
+                    value={cardDetails.expiry}
+                    onChangeText={(v) =>
+                      setCardDetails({ ...cardDetails, expiry: formatExpiry(v) })
+                    }
+                  />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <ThemedText style={styles.inputLabel}>CVC</ThemedText>
+                  <TextInput
+                    style={[styles.input, { color: theme.text, borderColor: iconBoxBg }]}
+                    placeholder="123"
+                    placeholderTextColor="#888"
+                    keyboardType="numeric"
+                    secureTextEntry
+                    value={cardDetails.cvc}
+                    onChangeText={(v) => setCardDetails({ ...cardDetails, cvc: formatCVC(v) })}
+                  />
+                </View>
+              </View>
+
+              <Pressable
+                style={[
+                  styles.modalPayBtn,
+                  (isPaying || !isFormValid) && { backgroundColor: '#95a5a6' }, // Grey out if invalid
+                ]}
+                onPress={() => finalizeOrder()}
+                disabled={isPaying || !isFormValid}>
+                {isPaying ? (
+                  <ActivityIndicator color="white" />
+                ) : (
+                  <ThemedText style={styles.payText}>
+                    {!isFormValid
+                      ? 'Enter Card Details'
+                      : `Confirm Payment • $${order?.total_price.toFixed(2)}`}
+                  </ThemedText>
+                )}
+              </Pressable>
+            </View>
+          </View>
+        </KeyboardAvoidingView>
+      </Modal>
+
       <LocationPickerModal
         visible={isMapVisible}
         onClose={() => setIsMapVisible(false)}
@@ -263,7 +381,7 @@ export default function OrderDetailScreen() {
         {order?.status === 'new' && (
           <Pressable
             style={[styles.payButton, isPayDisabled && styles.payButtonDisabled]}
-            onPress={() => proceedToPayment(deliveryInfo)}
+            onPress={handlePayPress}
             disabled={isPayDisabled}>
             {isPaying ? (
               <ActivityIndicator color="white" />
@@ -459,5 +577,48 @@ const styles = StyleSheet.create({
     fontWeight: '800',
     textTransform: 'uppercase',
     marginLeft: 8,
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.6)',
+    justifyContent: 'flex-end',
+  },
+  modalContent: {
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    padding: 24,
+    paddingBottom: 40,
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: '800',
+  },
+  paymentForm: {
+    gap: 15,
+  },
+  inputLabel: {
+    fontSize: 14,
+    fontWeight: '600',
+    opacity: 0.7,
+    marginBottom: 6,
+  },
+  input: {
+    borderWidth: 1,
+    borderRadius: 12,
+    padding: 14,
+    fontSize: 16,
+  },
+  modalPayBtn: {
+    backgroundColor: '#2ecc71',
+    padding: 18,
+    borderRadius: 16,
+    alignItems: 'center',
+    marginTop: 10,
   },
 });

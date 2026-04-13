@@ -1,11 +1,12 @@
-import React from 'react';
+import React, { useState } from 'react'; // Added useState
 import {
   ActivityIndicator,
+  Alert,
   FlatList,
   Image,
   Pressable,
   StyleSheet,
-  View
+  View,
 } from 'react-native';
 import { useCartStore } from '@/store/cartStore';
 import { ThemedView } from '@/components/themed-view';
@@ -17,18 +18,30 @@ import { useAuth } from '@clerk/expo';
 export default function CartScreen() {
   const { items, removeItem, totalPrice } = useCartStore();
   const { userId } = useAuth();
+  const [isStripeLoading, setIsStripeLoading] = useState(false);
 
-  const { mutate: createOrder, isPending } = useCreateOrder();
+  const { mutate: createOrder, isPending: isOrderCreating } = useCreateOrder();
 
-  const handleCheckout = () => {
+  const handleCheckout = async () => {
     if (items.length === 0) return;
+    setIsStripeLoading(true);
 
-    createOrder({
-      items: items,
-      total: totalPrice(),
-      user_id: userId || null,
-    });
+    try {
+      await new Promise((resolve) => setTimeout(resolve, 1500));
+
+      createOrder({
+        items: items,
+        total: totalPrice(),
+        user_id: userId || null,
+      });
+    } catch (error: any) {
+      Alert.alert('Payment Failed', error.message);
+    } finally {
+      setIsStripeLoading(false);
+    }
   };
+
+  const isProcessing = isStripeLoading || isOrderCreating;
 
   const renderItem = ({ item }: { item: any }) => (
     <View style={styles.cartItem}>
@@ -40,7 +53,7 @@ export default function CartScreen() {
           ${(item.price * item.quantity).toFixed(2)}
         </ThemedText>
       </View>
-      <Pressable onPress={() => removeItem(item.id)} disabled={isPending}>
+      <Pressable onPress={() => removeItem(item.id)} disabled={isProcessing}>
         <Ionicons name="trash-outline" size={22} color="red" />
       </Pressable>
     </View>
@@ -69,13 +82,13 @@ export default function CartScreen() {
           </View>
 
           <Pressable
-            style={[styles.checkoutBtn, isPending && { opacity: 0.7 }]}
+            style={[styles.checkoutBtn, isProcessing && { opacity: 0.7 }]}
             onPress={handleCheckout}
-            disabled={isPending}>
-            {isPending ? (
+            disabled={isProcessing}>
+            {isProcessing ? (
               <ActivityIndicator color="white" />
             ) : (
-              <ThemedText style={styles.btnText}>Checkout</ThemedText>
+              <ThemedText style={styles.btnText}>Pay & Place Order</ThemedText>
             )}
           </Pressable>
         </View>
